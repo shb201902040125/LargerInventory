@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Import tModLoader mod properties -->
+	<Import Project="..\tModLoader.targets" />
+
+	<!-- General -->
+  <PropertyGroup>
+    <PublicizeAll>true</PublicizeAll>
+  </PropertyGroup>
+	<ItemGroup>
+	  <PackageReference Include="Krafs.Publicizer" Version="2.2.1">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="SML">
+	    <HintPath>..\SML\bin\Debug\net8.0\SML.dll</HintPath>
+	  </Reference>
+	</ItemGroup>
+  
+
+	<!-- References -->
+
+</Project>
