@@ -23,5 +23,19 @@ namespace LargerInventory.BackEnd
             }
             return base.ConsumeItem(item, player);
         }
+        public override bool CanPickup(Item item, Player player)
+        {
+            return true;
+        }
+        public override bool OnPickup(Item item, Player player)
+        {
+            var status = player.ItemSpace(item);
+            if (!status.CanTakeItem)
+            {
+                Inventory.PushItem(item);
+                return false;
+            }
+            return base.OnPickup(item, player);
+        }
     }
 }
