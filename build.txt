@@ -1,3 +1,4 @@
 displayName = Larger Inventory
 author = SilverMoon
 version = 0.1
+modReferences = SML, ForOneToolkit

@@ -8,15 +8,15 @@
     <PublicizeAll>true</PublicizeAll>
   </PropertyGroup>
 	<ItemGroup>
-	  <PackageReference Include="Krafs.Publicizer" Version="2.2.1">
-	    <PrivateAssets>all</PrivateAssets>
-	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	  </PackageReference>
-	</ItemGroup>
-	<ItemGroup>
 	  <Reference Include="SML">
 	    <HintPath>..\SML\bin\Debug\net8.0\SML.dll</HintPath>
 	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="UI\ExtraUI\" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\ForOneToolkit\ForOneToolkit.csproj" />
 	</ItemGroup>
   
 

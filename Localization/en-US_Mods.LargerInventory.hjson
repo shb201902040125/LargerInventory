@@ -1,2 +1,27 @@
-# This file will automatically update with entries for new content after a build and reload.
+Configs: {
+	LIConfigs: {
+		DisplayName: L I Configs
 
+		ReplenishStockBeforeUse: {
+			Label: Replenish Stock Before Use
+			Tooltip: ""
+		}
+
+		AutoUseLifePotion: {
+			Label: Auto Use Life Potion
+			Tooltip: ""
+		}
+
+		AutoUseManaPotion: {
+			Label: Auto Use Mana Potion
+			Tooltip: ""
+		}
+
+		PayFromInventory: {
+			Label: Pay From Inventory
+			Tooltip: ""
+		}
+	}
+}
+
+Keybinds.SwitchInv.DisplayName: Switch Inv

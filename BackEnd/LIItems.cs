@@ -1,14 +1,4 @@
-﻿using Humanizer;
-using MonoMod.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using Terraria;
-using Terraria.GameContent.UI;
-using Terraria.ID;
+﻿using Terraria;
 using Terraria.ModLoader;
 
 namespace LargerInventory.BackEnd
@@ -22,6 +12,10 @@ namespace LargerInventory.BackEnd
                 Inventory.PickItem(item, item.maxStack - item.stack);
             }
             return base.ConsumeItem(item, player);
+        }
+        public override bool CanPickup(Item item, Player player)
+        {
+            return true;
         }
     }
 }
