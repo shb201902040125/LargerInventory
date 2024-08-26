@@ -5,9 +5,10 @@ namespace LargerInventory.BackEnd
 {
     internal class LIItems : GlobalItem
     {
+        bool ignoreSelfInfluence;
         public override bool ConsumeItem(Item item, Player player)
         {
-            if (LIConfigs.Instance.ReplenishStockBeforeUse)
+            if (!ignoreSelfInfluence && LIConfigs.Instance.ReplenishStockBeforeUse)
             {
                 Inventory.PickItem(item, item.maxStack - item.stack);
             }
@@ -15,7 +16,26 @@ namespace LargerInventory.BackEnd
         }
         public override bool CanPickup(Item item, Player player)
         {
-            return true;
+            return !ignoreSelfInfluence || base.CanPickup(item, player);
+        }
+        public override bool OnPickup(Item item, Player player)
+        {
+            if (!ignoreSelfInfluence)
+            {
+                ignoreSelfInfluence = true;
+                var status = player.ItemSpace(item);
+                ignoreSelfInfluence = false;
+                if (!status.CanTakeItem)
+                {
+                    Inventory.PushItem(item);
+                    return false;
+                }
+            }
+            return base.OnPickup(item, player);
+        }
+        public override bool ItemSpace(Item item, Player player)
+        {
+            return !ignoreSelfInfluence || base.ItemSpace(item, player);
         }
     }
 }

@@ -27,19 +27,5 @@ namespace LargerInventory.BackEnd
             Inventory.TryHealLife(Player);
             Inventory.TryHealMana(Player);
         }
-        public override bool OnPickup(Item item)
-        {
-            var status = Player.ItemSpace(item);
-            //if (!status.CanTakeItem)
-            {
-                Inventory.PushItem(item, out bool refresh);
-                if (refresh)
-                {
-                    InvUI.Ins.Refresh();
-                }
-                return false;
-            }
-            return base.OnPickup(item);
-        }
     }
 }

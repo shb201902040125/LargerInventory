@@ -1,4 +1,12 @@
 displayName = Larger Inventory
 author = SilverMoon
 version = 0.1
-modReferences = SML, ForOneToolkit
+hideCode = false
+hideResources = true
+includeSource = false
+buildIgnore = *.csproj, *.user, obj\*, .vs\*
+includePDB = false
+dllReferences = SML
+sortAfter = SML
+version = 0.1
+modReferences = ForOneToolkit
