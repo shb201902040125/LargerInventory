@@ -1,5 +1,4 @@
-﻿using Terraria;
-using Terraria.ModLoader;
+﻿using LargerInventory.UI.Inventory;
 
 namespace LargerInventory.BackEnd
 {
@@ -27,7 +26,11 @@ namespace LargerInventory.BackEnd
                 ignoreSelfInfluence = false;
                 if (!status.CanTakeItem)
                 {
-                    Inventory.PushItem(item);
+                    Inventory.PushItem(item, out bool refresh);
+                    if (refresh)
+                    {
+                        InvUI.Ins.Refresh();
+                    }
                     return false;
                 }
             }

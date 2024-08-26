@@ -23,17 +23,12 @@
       <HintPath>..\SML\bin\Debug\net8.0\SML.dll</HintPath>
     </Reference>
   </ItemGroup>
-	  <Reference Include="SML">
-	    <HintPath>..\SML\bin\Debug\net8.0\SML.dll</HintPath>
-	  </Reference>
-	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="UI\ExtraUI\" />
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\ForOneToolkit\ForOneToolkit.csproj" />
 	</ItemGroup>
-  
 
 	<!-- References -->
 
