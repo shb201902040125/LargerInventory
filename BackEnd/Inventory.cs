@@ -1,11 +1,10 @@
-﻿using Microsoft.Xna.Framework;
+﻿using SML.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
-using Terraria.ModLoader;
-using SML.Common;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace LargerInventory.BackEnd
 {
@@ -107,12 +106,14 @@ namespace LargerInventory.BackEnd
                 healMana[item] = item.healMana;
             }
         }
-        public static void PushItem(Item item)
+        public static void PushItem(Item item, out bool refresh)
         {
+            refresh = false;
             if (!_items.TryGetValue(item.type, out var container))
             {
                 _items[item.type] = container = [];
             }
+            int count = container.Count;
             foreach (var target in container)
             {
                 if (ItemLoader.CanStack(target, item))
@@ -132,6 +133,7 @@ namespace LargerInventory.BackEnd
                 SplitItem(item, splitedItems);
                 container.AddRange(splitedItems);
             }
+            refresh = count != container.Count;
             WriteCache(item.type);
         }
         public static void PushItemToEnd(Item item)
@@ -206,6 +208,16 @@ namespace LargerInventory.BackEnd
             (item, container[index]) = (container[index], item);
             return true;
         }
+        public static bool PopItems(Item item)
+        {
+            if (!_items.TryGetValue(item.type, out var container))
+                return false;
+            int index = container.IndexOf(item);
+            if (index < 0)
+                return false;
+            container.RemoveAt(index);
+            return true;
+        }
         public static void CompressItemList(int type)
         {
             if (_items.TryGetValue(type, out var container))
@@ -222,10 +234,10 @@ namespace LargerInventory.BackEnd
         }
         private static KeyValuePair<Item, int> FindBestMatch(Dictionary<Item, int> data, int target)
         {
-            return data.OrderBy(kvp=>Math.Abs(kvp.Value-target))
-                .ThenBy(kvp=>kvp.Value)
-                .ThenBy(kvp=>kvp.Key.value)
-                .ThenBy(kvp=>kvp.Key.type)
+            return data.OrderBy(kvp => Math.Abs(kvp.Value - target))
+                .ThenBy(kvp => kvp.Value)
+                .ThenBy(kvp => kvp.Key.value)
+                .ThenBy(kvp => kvp.Key.type)
                 .First();
         }
         public static void TryHealLife(Player player)

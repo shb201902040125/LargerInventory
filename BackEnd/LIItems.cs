@@ -1,14 +1,5 @@
-﻿using Humanizer;
-using MonoMod.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+﻿using LargerInventory.UI.Inventory;
 using Terraria;
-using Terraria.GameContent.UI;
-using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace LargerInventory.BackEnd
@@ -37,7 +28,11 @@ namespace LargerInventory.BackEnd
                 ignoreSelfInfluence = false;
                 if (!status.CanTakeItem)
                 {
-                    Inventory.PushItem(item);
+                    Inventory.PushItem(item, out bool refresh);
+                    if (refresh)
+                    {
+                        InvUI.Ins.Refresh();
+                    }
                     return false;
                 }
             }
