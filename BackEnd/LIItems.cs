@@ -1,4 +1,6 @@
 ﻿using LargerInventory.UI.Inventory;
+using Terraria;
+using Terraria.ModLoader;
 
 namespace LargerInventory.BackEnd
 {

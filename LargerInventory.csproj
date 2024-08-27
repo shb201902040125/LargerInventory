@@ -4,20 +4,6 @@
 	<Import Project="..\tModLoader.targets" />
 
 	<!-- General -->
-  <PropertyGroup>
-    <PublicizeAll>true</PublicizeAll>
-    <PublicizerClearCacheOnClean>true</PublicizerClearCacheOnClean>
-  </PropertyGroup>
-	<ItemGroup>
-	  <PackageReference Include="Krafs.Publicizer" Version="2.2.1">
-	    <PrivateAssets>all</PrivateAssets>
-	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	  </PackageReference>
-	</ItemGroup>
-  <ItemGroup>
-    <Publicize Include="SML" IncludeVirtualMembers="false" />
-    <Publicize Include="SLargerInventory" IncludeVirtualMembers="false" />
-  </ItemGroup>
   <ItemGroup>
     <Reference Include="SML">
       <HintPath>..\SML\bin\Debug\net8.0\SML.dll</HintPath>

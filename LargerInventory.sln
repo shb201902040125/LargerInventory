@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LargerInventory", "LargerIn
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SML", "..\SML\SML.csproj", "{1FDB87D1-AA43-4DA7-A82E-2941D4B68642}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ForOneToolkit", "..\ForOneToolkit\ForOneToolkit.csproj", "{12587CE4-6131-44F9-A587-F4F6924D8EA4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ForOneToolkit", "..\ForOneToolkit\ForOneToolkit.csproj", "{ACEC9323-055A-489B-9AF4-171BD8E5CBD7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{1FDB87D1-AA43-4DA7-A82E-2941D4B68642}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FDB87D1-AA43-4DA7-A82E-2941D4B68642}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1FDB87D1-AA43-4DA7-A82E-2941D4B68642}.Release|Any CPU.Build.0 = Release|Any CPU
-		{12587CE4-6131-44F9-A587-F4F6924D8EA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{12587CE4-6131-44F9-A587-F4F6924D8EA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{12587CE4-6131-44F9-A587-F4F6924D8EA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{12587CE4-6131-44F9-A587-F4F6924D8EA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ACEC9323-055A-489B-9AF4-171BD8E5CBD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ACEC9323-055A-489B-9AF4-171BD8E5CBD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ACEC9323-055A-489B-9AF4-171BD8E5CBD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ACEC9323-055A-489B-9AF4-171BD8E5CBD7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
