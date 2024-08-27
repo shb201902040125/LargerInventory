@@ -39,7 +39,7 @@ namespace LargerInventory.BackEnd
                 item.stack -= move;
                 ItemLoader.OnConsumeItem(item, Main.LocalPlayer);
                 onUpdate?.Invoke(this, item);
-                if (quickMap.All(pair => pair.value == 0))
+                if (quickMap.All(pair => pair.Value == 0))
                 {
                     IsCompleted = true;
                     onComplete?.Invoke(this);
