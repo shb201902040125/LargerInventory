@@ -24,8 +24,6 @@ public partial class InvUI : UIContainer
         bg.SetPadding(10);
         bg.SetCenter(0, 0);
         Add(bg);
-
-        float x = 0, y = 0;
         /*const string vp = "Terraria/Images/";
         for (int i = 0; i < 4; i++)
         {
@@ -99,7 +97,9 @@ public partial class InvUI : UIContainer
             if (origin.type == 0)
             {
                 if (mouse.type == 0)
+                {
                     return;
+                }
                 //栏位是空执行放入，背包同时执行放入
                 origin = mouse.Clone();
                 Inv.PushItemToEnd(origin);
@@ -140,7 +140,9 @@ public partial class InvUI : UIContainer
             ref Item origin = ref s.Item;
             //栏位是空拿不到任何东西
             if (origin.type == 0)
+            {
                 return;
+            }
 
             //鼠标没东西时
             if (mouse.type == 0)
@@ -185,7 +187,7 @@ public partial class InvUI : UIContainer
             {
                 time--;
                 int mult = (time - 20) / 5;
-                int space = (int)(Math.Sqrt(20 - Math.Min(mult, 19)));
+                int space = (int)Math.Sqrt(20 - Math.Min(mult, 19));
                 int count = Math.Max(1, mult - 20);
                 count = Math.Min(count, origin.stack);
                 if (time % space == 0)

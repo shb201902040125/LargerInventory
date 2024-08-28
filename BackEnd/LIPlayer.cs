@@ -1,6 +1,5 @@
 ﻿using LargerInventory.UI.Inventory;
 using Microsoft.Xna.Framework.Input;
-using Terraria;
 using Terraria.GameInput;
 using Terraria.ModLoader;
 
@@ -17,7 +16,7 @@ namespace LargerInventory.BackEnd
         {
             if (SwitchInv.JustPressed)
             {
-                var inv = InvUI.Ins;
+                InvUI inv = InvUI.Ins;
                 inv.Clear();
                 inv.Initialize();
             }

@@ -33,10 +33,10 @@ namespace LargerInventory.BackEnd
         {
             List<Item> resultItems = [];
             items = [.. items.OrderByDescending(item => item.maxStack)];
-            foreach (var item in items)
+            foreach (Item item in items)
             {
                 bool addedToExisting = false;
-                foreach (var resultItem in resultItems)
+                foreach (Item resultItem in resultItems)
                 {
                     if (ItemLoader.CanStack(resultItem, item))
                     {
@@ -59,7 +59,7 @@ namespace LargerInventory.BackEnd
                 }
             }
             List<Item> res = [], splitedItems = [];
-            foreach (var item in resultItems)
+            foreach (Item item in resultItems)
             {
                 if (item.stack == 0)
                 {
@@ -89,7 +89,7 @@ namespace LargerInventory.BackEnd
         }
         private static void WriteCache(int type)
         {
-            var cachedType = GetOrCreateCache<HashSet<int>>(CacheKey_CachedType);
+            HashSet<int> cachedType = GetOrCreateCache<HashSet<int>>(CacheKey_CachedType);
             if (!cachedType.Add(type))
             {
                 return;
@@ -97,24 +97,24 @@ namespace LargerInventory.BackEnd
             Item item = ContentSamples.ItemsByType[type];
             if (item.potion && item.healLife > 0)
             {
-                var healLife = GetOrCreateCache<Dictionary<Item, int>>(CacheKey_HealLifeData);
+                Dictionary<Item, int> healLife = GetOrCreateCache<Dictionary<Item, int>>(CacheKey_HealLifeData);
                 healLife[item] = item.healLife;
             }
             if (item.healMana > 0 && !item.potion)
             {
-                var healMana = GetOrCreateCache<Dictionary<Item, int>>(CacheKey_HealManaData);
+                Dictionary<Item, int> healMana = GetOrCreateCache<Dictionary<Item, int>>(CacheKey_HealManaData);
                 healMana[item] = item.healMana;
             }
         }
         public static void PushItem(Item item, out bool refresh)
         {
             refresh = false;
-            if (!_items.TryGetValue(item.type, out var container))
+            if (!_items.TryGetValue(item.type, out List<Item> container))
             {
                 _items[item.type] = container = [];
             }
             int count = container.Count;
-            foreach (var target in container)
+            foreach (Item target in container)
             {
                 if (ItemLoader.CanStack(target, item))
                 {
@@ -138,7 +138,7 @@ namespace LargerInventory.BackEnd
         }
         public static void PushItemToEnd(Item item)
         {
-            if (!_items.TryGetValue(item.type, out var container))
+            if (!_items.TryGetValue(item.type, out List<Item> container))
             {
                 _items[item.type] = container = [];
             }
@@ -149,7 +149,7 @@ namespace LargerInventory.BackEnd
         }
         public static bool PutItemToDesignatedIndex(Item item, int index)
         {
-            if (!_items.TryGetValue(item.type, out var container) || !container.IndexInRange(index))
+            if (!_items.TryGetValue(item.type, out List<Item> container) || !container.IndexInRange(index))
             {
                 return false;
             }
@@ -167,13 +167,13 @@ namespace LargerInventory.BackEnd
         }
         public static int PickItem(Item item, int count)
         {
-            if (!_items.TryGetValue(item.type, out var container))
+            if (!_items.TryGetValue(item.type, out List<Item> container))
             {
                 return 0;
             }
             count = Math.Min(count, item.maxStack - item.stack);
             int moved = 0;
-            foreach (var target in container)
+            foreach (Item target in container)
             {
                 int move = Math.Min(target.stack, count);
                 target.stack -= move;
@@ -188,7 +188,7 @@ namespace LargerInventory.BackEnd
         }
         public static int PickItemFromDesignatedIndex(Item item, int index, int count)
         {
-            if (!_items.TryGetValue(item.type, out var container) || !container.IndexInRange(index))
+            if (!_items.TryGetValue(item.type, out List<Item> container) || !container.IndexInRange(index))
             {
                 return 0;
             }
@@ -201,7 +201,7 @@ namespace LargerInventory.BackEnd
         }
         public static bool ExchangeItems(ref Item item, int index)
         {
-            if (!_items.TryGetValue(item.type, out var container) || !container.IndexInRange(index))
+            if (!_items.TryGetValue(item.type, out List<Item> container) || !container.IndexInRange(index))
             {
                 return false;
             }
@@ -210,24 +210,30 @@ namespace LargerInventory.BackEnd
         }
         public static bool PopItems(Item item)
         {
-            if (!_items.TryGetValue(item.type, out var container))
+            if (!_items.TryGetValue(item.type, out List<Item> container))
+            {
                 return false;
+            }
+
             int index = container.IndexOf(item);
             if (index < 0)
+            {
                 return false;
+            }
+
             container.RemoveAt(index);
             return true;
         }
         public static void CompressItemList(int type)
         {
-            if (_items.TryGetValue(type, out var container))
+            if (_items.TryGetValue(type, out List<Item> container))
             {
                 CompressItems(container);
             }
         }
         public static void CompressAllItems()
         {
-            foreach (var items in _items.Values)
+            foreach (List<Item> items in _items.Values)
             {
                 CompressItems(items);
             }
@@ -252,7 +258,7 @@ namespace LargerInventory.BackEnd
                 return;
             }
             int cure = player.statLifeMax2 - player.statLife;
-            var bestMatch = FindBestMatch(GetOrCreateCache<Dictionary<Item, int>>(CacheKey_HealLifeData), cure);
+            KeyValuePair<Item, int> bestMatch = FindBestMatch(GetOrCreateCache<Dictionary<Item, int>>(CacheKey_HealLifeData), cure);
             _fakeItem ??= new();
             _fakeItem.SetDefaults(bestMatch.Key.type);
             _fakeItem.stack = 0;
@@ -271,7 +277,7 @@ namespace LargerInventory.BackEnd
                 return;
             }
             int cure = player.statManaMax2 - player.statMana;
-            var beatMatch = FindBestMatch(GetOrCreateCache<Dictionary<Item, int>>(CacheKey_HealManaData), cure);
+            KeyValuePair<Item, int> beatMatch = FindBestMatch(GetOrCreateCache<Dictionary<Item, int>>(CacheKey_HealManaData), cure);
             _fakeItem ??= new();
             _fakeItem.SetDefaults(beatMatch.Key.type);
             _fakeItem.stack = 0;

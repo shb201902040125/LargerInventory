@@ -6,7 +6,7 @@ namespace LargerInventory.BackEnd
 {
     internal class LIItems : GlobalItem
     {
-        bool ignoreSelfInfluence;
+        private bool ignoreSelfInfluence;
         public override bool ConsumeItem(Item item, Player player)
         {
             if (!ignoreSelfInfluence && LIConfigs.Instance.ReplenishStockBeforeUse)
@@ -24,7 +24,7 @@ namespace LargerInventory.BackEnd
             if (!ignoreSelfInfluence)
             {
                 ignoreSelfInfluence = true;
-                var status = player.ItemSpace(item);
+                Player.ItemSpaceStatus status = player.ItemSpace(item);
                 ignoreSelfInfluence = false;
                 if (!status.CanTakeItem)
                 {

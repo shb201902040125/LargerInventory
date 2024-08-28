@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -24,15 +22,15 @@ namespace LargerInventory.BackEnd
         public override bool Update(Item item)
         {
             int type = item.type;
-            foreach (var group in Target.acceptedGroups)
+            foreach (int group in Target.acceptedGroups)
             {
-                var recipeGroup = RecipeGroup.recipeGroups[type];
+                RecipeGroup recipeGroup = RecipeGroup.recipeGroups[type];
                 if (recipeGroup.ContainsItem(type))
                 {
                     type = recipeGroup.IconicItemId;
                 }
             }
-            if (quickMap.TryGetValue(type, out var stack) && stack > 0)
+            if (quickMap.TryGetValue(type, out int stack) && stack > 0)
             {
                 int move = Math.Min(stack, item.stack);
                 quickMap[type] = stack - move;
@@ -52,7 +50,7 @@ namespace LargerInventory.BackEnd
         {
             Target = target;
             quickMap.Clear();
-            foreach(var required in target.requiredItem)
+            foreach (Item required in target.requiredItem)
             {
                 if (quickMap.ContainsKey(required.type))
                 {
@@ -77,7 +75,7 @@ namespace LargerInventory.BackEnd
     {
         public override bool Handle(RecipeTask @event)
         {
-            if(!@event.IsCompleted)
+            if (!@event.IsCompleted)
             {
                 return false;
             }
