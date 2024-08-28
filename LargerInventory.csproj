@@ -13,6 +13,9 @@
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
 	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\ForOneToolkit\ForOneToolkit.csproj" />
+	</ItemGroup>
   <ItemGroup>
     <Publicize Include="tModLoader" IncludeVirtualMembers="false" />
     <Publicize Include="ReLogic" IncludeVirtualMembers="false" />
