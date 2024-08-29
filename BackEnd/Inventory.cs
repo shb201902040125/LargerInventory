@@ -1,6 +1,7 @@
 ﻿using SML.Common;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Terraria;
 using Terraria.ID;
@@ -119,6 +120,10 @@ namespace LargerInventory.BackEnd
                 if (ItemLoader.CanStack(target, item))
                 {
                     int move = Math.Min(target.maxStack - target.stack, item.stack);
+                    if (move == 0)
+                    {
+                        continue;
+                    }
                     target.stack += move;
                     item.stack -= move;
                     if (item.stack == 0)
@@ -159,6 +164,10 @@ namespace LargerInventory.BackEnd
                 return false;
             }
             int move = Math.Min(target.maxStack - target.stack, item.stack);
+            if (move == 0)
+            {
+                return false;
+            }
             item.stack -= move;
             target.stack += move;
             ItemLoader.OnStack(target, item, move);
@@ -176,6 +185,10 @@ namespace LargerInventory.BackEnd
             foreach (Item target in container)
             {
                 int move = Math.Min(target.stack, count);
+                if (move == 0)
+                {
+                    continue;
+                }
                 target.stack -= move;
                 moved += move;
                 count -= move;
@@ -195,8 +208,13 @@ namespace LargerInventory.BackEnd
             count = Math.Min(count, item.maxStack - item.stack);
             Item target = container[index];
             int move = Math.Min(target.stack, count);
+            if (move == 0)
+            {
+                return 0;
+            }
             target.stack -= move;
             item.stack += move;
+            ItemLoader.OnStack(item, target, move);
             return move;
         }
         public static bool ExchangeItems(ref Item item, int index)
@@ -208,19 +226,14 @@ namespace LargerInventory.BackEnd
             (item, container[index]) = (container[index], item);
             return true;
         }
-        public static bool PopItems(Item item)
+        public static bool PopItems(int type, int index, [NotNullWhen(true)] out Item item)
         {
-            if (!_items.TryGetValue(item.type, out List<Item> container))
+            item = null;
+            if (!_items.TryGetValue(type, out List<Item> container) || container.IndexInRange(index))
             {
                 return false;
             }
-
-            int index = container.IndexOf(item);
-            if (index < 0)
-            {
-                return false;
-            }
-
+            item = container[index];
             container.RemoveAt(index);
             return true;
         }

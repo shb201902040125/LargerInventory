@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.GameContent;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Inv = LargerInventory.BackEnd.Inventory;
 
@@ -74,11 +75,12 @@ public partial class InvUI : UIContainer
         view.Clear();
         foreach (int type in Items.Keys)
         {
-            foreach (Item item in Items[type])
+            for(int index=0;index< Items[type].Count;index++)
             {
+                Item item = Items[type][index];
                 if (condition?.Invoke(item) != false)
                 {
-                    UIItemSlot slot = new(item);
+                    UIInvItemSlot slot = new(item, type, index);
                     HandleEvent(slot);
                     view.Add(slot);
                 }
@@ -91,112 +93,87 @@ public partial class InvUI : UIContainer
         slot.OnLeftJustPress += uie =>
         {
             //左键单机
-            UIItemSlot s = uie as UIItemSlot;
-            ref Item mouse = ref Main.mouseItem;
-            ref Item origin = ref s.Item;
-            if (origin.type == 0)
+            if (uie is not UIInvItemSlot s)
             {
-                if (mouse.type == 0)
+                return;
+            }
+            if (s.Item.IsAir)
+            {
+                if (Main.mouseItem.IsAir)
                 {
                     return;
                 }
                 //栏位是空执行放入，背包同时执行放入
-                origin = mouse.Clone();
-                Inv.PushItemToEnd(origin);
-                mouse.SetDefaults();
+                Inv.PutItemToDesignatedIndex(Main.mouseItem, s.Index);
+                if (Main.mouseItem.IsAir)
+                {
+                    Main.mouseItem.SetDefaults(ItemID.None);
+                }
             }
             else//栏位不空
             {
                 //栏位与鼠标同类型
-                if (origin.type == mouse.type)
+                if (s.Item.type == Main.mouseItem.type)
                 {
-                    if (origin.stack < origin.maxStack && ItemLoader.CanStack(origin, mouse))
+                    if (!Inv.PutItemToDesignatedIndex(Main.mouseItem, s.Index))
                     {
-                        //可堆叠执行堆叠，背包无操作
-                        ItemLoader.StackItems(origin, mouse, out int trans);
-                    }
-                    else
-                    {
-                        //不可堆叠执行交换，背包同步交换
-                        Inv.PopItems(origin);
-                        (mouse, origin) = (origin, mouse);
-                        Inv.PushItemToEnd(origin);
+                        Inv.ExchangeItems(ref Main.mouseItem, s.Index);
                     }
                 }
                 else
                 {
                     //不同则交换，背包执行删除和放入
-                    Inv.PopItems(origin);
-                    (mouse, origin) = (origin, mouse);
-                    Inv.PushItemToEnd(origin);
+                    if (Inv.PopItems(s.Type, s.Index, out Item item))
+                    {
+                        (item, Main.mouseItem) = (Main.mouseItem, item);
+                        Inv.PushItemToEnd(item);
+                        //TODO
+                        //需要刷新UI列表
+                    }
                 }
             }
         };
         slot.OnRightJustPress += uie =>
         {
             //右键按下
-            UIItemSlot s = uie as UIItemSlot;
-            ref Item mouse = ref Main.mouseItem;
-            ref Item origin = ref s.Item;
             //栏位是空拿不到任何东西
-            if (origin.type == 0)
+            if (uie is not UIInvItemSlot s || s.Item.IsAir)
             {
                 return;
             }
 
             //鼠标没东西时
-            if (mouse.type == 0)
+            if (Main.mouseItem.IsAir)
             {
-                mouse = origin.Clone();
-                mouse.stack = 1;
-                if (origin.stack <= 1)
-                {
-                    Inv.PopItems(origin);
-                    origin.SetDefaults();
-                }
-                else
-                {
-                    origin.stack--;
-                }
+                Main.mouseItem.type = s.Item.type;
+                Inv.PickItemFromDesignatedIndex(Main.mouseItem, s.Index, 1);
             }
-            else if (mouse.type == origin.type)
+            else if (Main.mouseItem.type == s.Type)
             {
-                if (origin.stack <= 1)
-                {
-                    Inv.PopItems(origin);
-                    ItemLoader.StackItems(mouse, origin, out _, false, 1);
-                    origin.SetDefaults();
-                }
-                else
-                {
-                    ItemLoader.StackItems(mouse, origin, out _, false, 1);
-                }
+                Inv.PickItemFromDesignatedIndex(Main.mouseItem, s.Index, 1);
             }
         };
         slot.OnRightHolding += uie =>
         {
-            UIItemSlot s = uie as UIItemSlot;
-            int time = UISystem.Manager.MouseRight.KeepTime;
-            ref Item mouse = ref Main.mouseItem;
-            ref Item origin = ref s.Item;
-            if (origin.type == 0 || origin.type != mouse.type || !ItemLoader.CanStack(origin, mouse))
+            if (uie is not UIInvItemSlot s)
             {
                 return;
             }
-            else if (time > 30)
+            int time = UISystem.Manager.MouseRight.KeepTime;
+
+            if (s.Item.IsAir || s.Type != Main.mouseItem.type)
+            {
+                return;
+            }
+            else if (time > 300)
             {
                 time--;
                 int mult = (time - 20) / 5;
                 int space = (int)Math.Sqrt(20 - Math.Min(mult, 19));
                 int count = Math.Max(1, mult - 20);
-                count = Math.Min(count, origin.stack);
                 if (time % space == 0)
                 {
-                    if (origin.stack == count)
-                    {
-                        Inv.PopItems(origin);
-                    }
-                    ItemLoader.StackItems(mouse, origin, out _, false, count);
+                    Inv.PickItemFromDesignatedIndex(Main.mouseItem, s.Index, count);
                 }
             }
         };
