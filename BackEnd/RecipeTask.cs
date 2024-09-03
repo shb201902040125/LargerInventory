@@ -3,84 +3,110 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
+using Terraria.Audio;
+using Terraria.GameContent.Achievements;
 using Terraria.ModLoader;
+using Terraria.ID;
+using Microsoft.Xna.Framework;
 
 namespace LargerInventory.BackEnd
 {
-    internal class RecipeTask : GameEvent<RecipeTask, Item>
+    internal class RecipeTask : GameEvent<RecipeTask, Dictionary<int, List<Item>>>
     {
-        public Recipe Target { get; private set; }
-        private Dictionary<int, int> quickMap = [];
-        public RecipeTask(Recipe recipe)
+        Recipe _targetRecipe;
+        public override bool Update(Dictionary<int, List<Item>> inv)
         {
-            Target = recipe;
-            onComplete += delegate (RecipeTask recipeTask)
-            {
-                recipeTask.SetTarget(recipeTask.Target);
-            };
-        }
-        public override bool Update(Item item)
-        {
-            int type = item.type;
-            foreach (int group in Target.acceptedGroups)
-            {
-                RecipeGroup recipeGroup = RecipeGroup.recipeGroups[type];
-                if (recipeGroup.ContainsItem(type))
-                {
-                    type = recipeGroup.IconicItemId;
-                }
-            }
-            if (quickMap.TryGetValue(type, out int stack) && stack > 0)
-            {
-                int move = Math.Min(stack, item.stack);
-                quickMap[type] = stack - move;
-                item.stack -= move;
-                ItemLoader.OnConsumeItem(item, Main.LocalPlayer);
-                onUpdate?.Invoke(this, item);
-                if (quickMap.All(pair => pair.Value == 0))
-                {
-                    IsCompleted = true;
-                    onComplete?.Invoke(this);
-                }
-                return true;
-            }
-            return false;
-        }
-        public void SetTarget(Recipe target)
-        {
-            Target = target;
-            quickMap.Clear();
-            foreach (Item required in target.requiredItem)
-            {
-                if (quickMap.ContainsKey(required.type))
-                {
-                    quickMap[required.type] += required.stack;
-                }
-                else
-                {
-                    quickMap[required.type] = required.stack;
-                }
-            }
-            IsCompleted = false;
-        }
-        public override void BindHandler(GameEventHandler<RecipeTask, Item> handler)
-        {
-            onComplete += delegate (RecipeTask recipeTask)
-            {
-                handler.Update(recipeTask);
-            };
-        }
-    }
-    internal class RecipeTaskFinish : GameEventHandler<RecipeTask, Item>
-    {
-        public override bool Handle(RecipeTask @event)
-        {
-            if (!@event.IsCompleted)
+            if (Main.mouseItem.stack > 0 && !ItemLoader.CanStack(Main.mouseItem, _targetRecipe.createItem))
             {
                 return false;
             }
-            Main.LocalPlayer.QuickSpawnItem(default, @event.Target.createItem.type, @event.Target.createItem.stack);
-            return true;
+            var fakeMap = CreateFakeMap();
+            var checkMap = fakeMap.Values.ToHashSet();
+            Dictionary<Item, int> consumed = [];
+            foreach (var type in fakeMap.Keys)
+            {
+                if (fakeMap[type].Value == 0 || !inv.TryGetValue(type, out var container))
+                {
+                    continue;
+                }
+                for (int index = container.Count - 1; index >= 0; index--)
+                {
+                    var item = container[index];
+                    if (item.favorited)
+                    {
+                        continue;
+                    }
+                    int move = Math.Min(item.stack, fakeMap[type].Value);
+                    if (move > 0)
+                    {
+                        consumed[item] = move;
+                        fakeMap[type].Value -= move;
+                        if (fakeMap[type].Value == 0)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            if (checkMap.All(check => check.Value == 0))
+            {
+                foreach ((Item item, int consumedCount) in consumed)
+                {
+                    item.stack -= consumedCount;
+                }
+                Item crafted = _targetRecipe.createItem.Clone();
+                crafted.Prefix(-1);
+                AchievementsHelper.NotifyItemCraft(_targetRecipe);
+                AchievementsHelper.NotifyItemPickup(Main.player[Main.myPlayer], _targetRecipe.createItem);
+                if (Main.mouseItem.stack > 0)
+                {
+                    ItemLoader.StackItems(Main.mouseItem, crafted, out int num, false, null);
+                }
+                else
+                {
+                    Main.mouseItem = crafted;
+                }
+                Main.mouseItem.Center = Main.LocalPlayer.Center;
+                PopupText.NewText(PopupTextContext.ItemCraft, Main.mouseItem, _targetRecipe.createItem.stack, false, false);
+                if (Main.mouseItem.type > ItemID.None || _targetRecipe.createItem.type > ItemID.None)
+                {
+                    SoundEngine.PlaySound(SoundID.Grab with { Volume = 1, Pitch = 0 }, -Vector2.One);
+                }
+            }
+            return false;
+        }
+        private Dictionary<int, Ref<int>> CreateFakeMap()
+        {
+            Dictionary<int, Ref<int>> fakeMap = [];
+            foreach (var item in _targetRecipe.requiredItem)
+            {
+                if (fakeMap.TryGetValue(item.type, out Ref<int> required))
+                {
+                    required.Value += item.stack;
+                }
+                else
+                {
+                    fakeMap[item.type] = new Ref<int>(item.stack);
+                }
+            }
+
+            HashSet<int> groupItem = [];
+            foreach (var groupID in _targetRecipe.acceptedGroups)
+            {
+                var group = RecipeGroup.recipeGroups[groupID];
+                var targetType = group.IconicItemId;
+                groupItem.Add(groupID);
+                foreach (var unit in group.ValidItems)
+                {
+                    if (!fakeMap.ContainsKey(unit))
+                    {
+                        fakeMap[unit] = fakeMap[targetType];
+                    }
+                }
+            }
+            return fakeMap.OrderBy(kvp => !groupItem.Contains(kvp.Key))
+                         .ThenBy(kvp => kvp.Key)
+                         .ToDictionary();
         }
     }
 }

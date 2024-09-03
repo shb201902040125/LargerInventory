@@ -129,6 +129,8 @@ public partial class InvUI : UIContainer
                         Inv.PushItemToEnd(item);
                         //TODO
                         //需要刷新UI列表
+                        //s.Type = item.type;
+                        //s.Index = Items[s.Type].Count - 1;
                     }
                 }
             }
