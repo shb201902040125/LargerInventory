@@ -1,9 +1,4 @@
-﻿using ForOneToolkit.UI.Basic;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using RUIModule.RUIElements;
 using Terraria;
 
 namespace LargerInventory.UI.Inventory
@@ -12,8 +7,9 @@ namespace LargerInventory.UI.Inventory
     {
         internal int Type;
         internal int Index;
-        public UIInvItemSlot(Item item,int type,int index, int slotID = 0, float scale = 1f):base(item,slotID,scale)
+        public UIInvItemSlot(Item item, int type, int index, int slotID = 0, float scale = 1f) : base(item)
         {
+            Slot.slotID = slotID;
             Type = type;
             Index = index;
         }

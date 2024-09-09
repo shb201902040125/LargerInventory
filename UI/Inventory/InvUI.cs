@@ -1,30 +1,31 @@
-﻿using ForOneToolkit.UI.Basic;
-using ForOneToolkit.UI.Interface;
-using ForOneToolkit.UI.Scroll;
-using ForOneToolkit.UI.Sys;
+﻿using Microsoft.Xna.Framework;
+using RUIModule.RUIElements;
 using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
-using Terraria.ModLoader;
 using Inv = LargerInventory.BackEnd.Inventory;
 
 namespace LargerInventory.UI.Inventory;
 
-public partial class InvUI : UIContainer
+public partial class InvUI : ContainerElement
 {
     internal static InvUI Ins { get; private set; }
     public InvUI() => Ins = this;
     private static Dictionary<int, List<Item>> Items => Inv._items;
-    private UIMovableView view;
-    public override void OnInit()
+    private static bool invRightDown;
+    private static int invRightTime;
+    private static UIInvItemSlot currentSlot;
+    private UIContainerPanel view;
+    public override void OnInitialization()
     {
-        UICornerPanel bg = new() { CanDrag = true };
+        base.OnInitialization();
+        UICornerPanel bg = new(520, 320, null);
         bg.SetSize(520, 320);
-        bg.SetPadding(10);
-        bg.SetCenter(0, 0);
-        Add(bg);
+        bg.SetMargin(10);
+        bg.SetCenter(0, 0, 0.5f, 0.5f);
+        Register(bg);
         /*const string vp = "Terraria/Images/";
         for (int i = 0; i < 4; i++)
         {
@@ -51,53 +52,66 @@ public partial class InvUI : UIContainer
             allIN.SetCenter(0, 0);
             bottom.Add(allIN);}*/
 
-        UIImage line = new(TextureAssets.MagicPixel.Value, true, DrawTextureStyle.Full);
+        UIImage line = new(TextureAssets.MagicPixel.Value);
         line.SetSize(0, 2, 1);
         line.SetPos(0, 60);
-        bg.Add(line);
+        bg.Register(line);
 
-        UIBottom viewBg = [];
-        viewBg.SetSize(0, -70, 1, 1);
+        UIBottom viewBg = new(0, -70, 1, 1);
         viewBg.SetPos(0, 70);
-        bg.Add(viewBg);
+        bg.Register(viewBg);
 
-        view = [];
+        view = new();
         view.SetSize(-40, 0, 1, 1);
-        viewBg.Add(view);
+        view.autoPos = [5, 5];
+        viewBg.Register(view);
 
-        UIScrollV scroll = new(view, 62);
-        scroll.VerticalFlowLayout(10, 10);
-        viewBg.Add(scroll);
-        view.AddScroll(scroll);
+        VerticalScrollbar scroll = new(62);
+        view.SetVerticalScrollbar(scroll);
+    }
+    public override void Update(GameTime gt)
+    {
+        base.Update(gt);
+        if (invRightDown)
+        {
+            if (!Main.mouseRight)
+            {
+                invRightDown = false;
+                invRightTime = 0;
+                return;
+            }
+            InvRightHolding(currentSlot);
+            invRightTime++;
+        }
     }
     public void Refresh(Predicate<Item> condition = null)
     {
-        view.Clear();
+        view.ClearAllElements();
         foreach (int type in Items.Keys)
         {
-            for(int index=0;index< Items[type].Count;index++)
+            for (int index = 0; index < Items[type].Count; index++)
             {
                 Item item = Items[type][index];
                 if (condition?.Invoke(item) != false)
                 {
                     UIInvItemSlot slot = new(item, type, index);
                     HandleEvent(slot);
-                    view.Add(slot);
+                    view.Register(slot);
                 }
             }
         }
-        view.Calculate();
+        view.Calculation();
     }
     private static void HandleEvent(UIItemSlot slot)
     {
-        slot.OnLeftJustPress += uie =>
+        slot.Events.OnLeftDown += uie =>
         {
             //左键单机
             if (uie is not UIInvItemSlot s)
             {
                 return;
             }
-            if (s.Item.IsAir)
+            if (s.item.IsAir)
             {
                 if (Main.mouseItem.IsAir)
                 {
@@ -113,7 +127,7 @@ public partial class InvUI : UIContainer
             else//栏位不空
             {
                 //栏位与鼠标同类型
-                if (s.Item.type == Main.mouseItem.type)
+                if (s.item.type == Main.mouseItem.type)
                 {
                     if (!Inv.PutItemToDesignatedIndex(Main.mouseItem, s.Index))
                     {
@@ -133,49 +147,46 @@ public partial class InvUI : UIContainer
                 }
             }
         };
-        slot.OnRightJustPress += uie =>
+        slot.Events.OnRightDown += uie =>
         {
             //右键按下
             //栏位是空拿不到任何东西
-            if (uie is not UIInvItemSlot s || s.Item.IsAir)
+            if (uie is not UIInvItemSlot s || s.item.IsAir)
             {
                 return;
             }
-
+            currentSlot = s;
             //鼠标没东西时
             if (Main.mouseItem.IsAir)
             {
-                Main.mouseItem.type = s.Item.type;
+                Main.mouseItem.type = s.item.type;
                 Inv.PickItemFromDesignatedIndex(Main.mouseItem, s.Index, 1);
             }
             else if (Main.mouseItem.type == s.Type)
             {
                 Inv.PickItemFromDesignatedIndex(Main.mouseItem, s.Index, 1);
             }
+            invRightDown = true;
         };
-        slot.OnRightHolding += uie =>
-        {
-            if (uie is not UIInvItemSlot s)
-            {
-                return;
-            }
-            int time = UISystem.Manager.MouseRight.KeepTime;
+    }
+    private static void InvRightHolding(UIInvItemSlot s)
+    {
+        int time = invRightTime;
 
-            if (s.Item.IsAir || s.Type != Main.mouseItem.type)
+        if (s.item.IsAir || s.Type != Main.mouseItem.type)
+        {
+            return;
+        }
+        else if (time > 30)
+        {
+            time--;
+            int mult = (time - 20) / 5;
+            int space = (int)Math.Sqrt(20 - Math.Min(mult, 19));
+            int count = Math.Max(1, mult - 20);
+            if (time % space == 0)
             {
-                return;
+                Inv.PickItemFromDesignatedIndex(Main.mouseItem, s.Index, count);
             }
-            else if (time > 300)
-            {
-                time--;
-                int mult = (time - 20) / 5;
-                int space = (int)Math.Sqrt(20 - Math.Min(mult, 19));
-                int count = Math.Max(1, mult - 20);
-                if (time % space == 0)
-                {
-                    Inv.PickItemFromDesignatedIndex(Main.mouseItem, s.Index, count);
-                }
-            }
-        };
+        }
     }
 }

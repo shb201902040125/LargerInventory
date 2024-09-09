@@ -13,14 +13,14 @@
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
 	</ItemGroup>
-	<ItemGroup>
-	  <ProjectReference Include="..\ForOneToolkit\ForOneToolkit.csproj" />
-	</ItemGroup>
   <ItemGroup>
     <Publicize Include="tModLoader" IncludeVirtualMembers="false" />
     <Publicize Include="ReLogic" IncludeVirtualMembers="false" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="RUIModule">
+      <HintPath>lib\RUIModule.dll</HintPath>
+    </Reference>
     <Reference Include="SML">
       <HintPath>..\SML\bin\Debug\net8.0\SML.dll</HintPath>
     </Reference>
