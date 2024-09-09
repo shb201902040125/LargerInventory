@@ -14,6 +14,7 @@ namespace LargerInventory.BackEnd
         internal static Dictionary<int, List<Item>> _items = [];
         private static NormalCache _cache = new();
         private static Item _fakeItem;
+        private static Queue<RecipeTask> _recipeTasks = [];
 
         private const string CacheKey_CachedType = "cachedType";
         private const string CacheKey_HealLifeData = "healLifeData";
@@ -296,6 +297,17 @@ namespace LargerInventory.BackEnd
             _fakeItem.stack = 0;
             PickItem(_fakeItem, 1);
             player.ApplyLifeAndOrMana(_fakeItem);
+        }
+        public static void HandleRecipeTasks()
+        {
+            if (!_recipeTasks.TryDequeue(out var task))
+            {
+                return;
+            }
+            if(!task.Update(_items))
+            {
+                _recipeTasks.Enqueue(task);
+            }
         }
     }
 }
