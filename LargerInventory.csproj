@@ -4,23 +4,7 @@
 	<Import Project="..\tModLoader.targets" />
 
 	<!-- General -->
-  <PropertyGroup>
-    <PublicizerClearCacheOnClean>true</PublicizerClearCacheOnClean>
-  </PropertyGroup>
-	<ItemGroup>
-	  <PackageReference Include="Krafs.Publicizer" Version="2.2.1">
-	    <PrivateAssets>all</PrivateAssets>
-	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	  </PackageReference>
-	</ItemGroup>
   <ItemGroup>
-    <Publicize Include="tModLoader" IncludeVirtualMembers="false" />
-    <Publicize Include="ReLogic" IncludeVirtualMembers="false" />
-  </ItemGroup>
-  <ItemGroup>
-    <Reference Include="RUIModule">
-      <HintPath>lib\RUIModule.dll</HintPath>
-    </Reference>
     <Reference Include="SML">
       <HintPath>..\SML\bin\Debug\net8.0\SML.dll</HintPath>
     </Reference>

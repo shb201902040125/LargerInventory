@@ -6,6 +6,7 @@ namespace LargerInventory.BackEnd
 {
     internal class LIItems : GlobalItem
     {
+        public override bool InstancePerEntity => true;
         private bool ignoreSelfInfluence;
         public override bool ConsumeItem(Item item, Player player)
         {

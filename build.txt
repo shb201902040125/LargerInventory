@@ -9,4 +9,3 @@ includePDB = false
 version = 0.1
 sortAfter = SML
 modReferences = SML
-dllReferences = RUIModule

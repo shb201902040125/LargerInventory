@@ -17,8 +17,9 @@ namespace LargerInventory.BackEnd
             if (SwitchInv.JustPressed)
             {
                 InvUI inv = InvUI.Ins;
-                inv.RemoveAll();
-                inv.OnInitialization();
+                inv.RemoveAllChildren();
+                inv.OnInitialize();
+                inv.Recalculate();
             }
         }
         public override void PostUpdate()
