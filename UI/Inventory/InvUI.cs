@@ -1,4 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using LargerInventory.UI.ExtraUI;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
 using Terraria;
@@ -16,7 +18,7 @@ public partial class InvUI : UIState
     private static Dictionary<int, List<Item>> Items => Inv._items;
     private bool dragging;
     private Vector2 oldPos;
-    private UIList view;
+    private UIView view;
     private UIPanel bg;
     public override void OnInitialize()
     {
@@ -74,25 +76,31 @@ public partial class InvUI : UIState
         viewBg.SetPos(0, 70);
         bg.Append(viewBg);
 
-        view = [];
-        view.SetSize(-40, 0, 1, 1);
-        view.ManualSortMethod = list =>
+        view = new()
         {
-            int x = 0, y = 0;
+            ListPaddingX = 10,
+            ListPaddingY = 10,
+        };
+        view.SetSize(-40, 0, 1, 1);
+        view.ManualRePosMethod = (list, px, py) =>
+        {
+            float h = 0;
+            float x = px, y = py;
             int w = view.GetDimensions().ToRectangle().Width;
             foreach (UIElement uie in list)
             {
                 uie.SetPos(x, y);
                 Rectangle rect = uie.GetDimensions().ToRectangle();
-                x += rect.Width + 10;
+                x += rect.Width + px;
+                h = y + rect.Height;
                 if (x + rect.Width > w)
                 {
-                    x = 0;
-                    y += rect.Height;
+                    x = px;
+                    y += rect.Height + py;
                 }
             }
+            return h;
         };
-        //view.autoPos = [5, 5];
         viewBg.Append(view);
 
         UIScrollbar scroll = new();
@@ -121,6 +129,15 @@ public partial class InvUI : UIState
             oldPos = Main.MouseScreen;
         }
     }
+    protected override void DrawChildren(SpriteBatch spriteBatch)
+    {
+        ref float scale = ref Main.inventoryScale;
+        float old = scale;
+        scale = 1;
+        base.DrawChildren(spriteBatch);
+        scale = old;
+
+    }
     public void Refresh(Predicate<Item> condition = null)
     {
         view.Clear();
@@ -133,7 +150,7 @@ public partial class InvUI : UIState
                 Item item = Items[type][index];
                 if (condition?.Invoke(item) != false)
                 {
-                    UIItemSlot slot = new(array, index, 0);
+                    UIInvSlot slot = new(item, index);
                     view.Add(slot);
                 }
             }
