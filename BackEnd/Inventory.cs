@@ -125,6 +125,7 @@ namespace LargerInventory.BackEnd
                     {
                         continue;
                     }
+                    ItemLoader.OnStack(target, item, move);
                     target.stack += move;
                     item.stack -= move;
                     if (item.stack == 0)
@@ -169,9 +170,9 @@ namespace LargerInventory.BackEnd
             {
                 return false;
             }
+            ItemLoader.OnStack(target, item, move);
             item.stack -= move;
             target.stack += move;
-            ItemLoader.OnStack(target, item, move);
             WriteCache(item.type);
             return true;
         }
@@ -190,6 +191,7 @@ namespace LargerInventory.BackEnd
                 {
                     continue;
                 }
+                ItemLoader.OnStack(item, target, move);
                 target.stack -= move;
                 moved += move;
                 count -= move;

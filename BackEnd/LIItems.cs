@@ -22,12 +22,12 @@ namespace LargerInventory.BackEnd
         }
         public override bool OnPickup(Item item, Player player)
         {
-            Inventory.PushItem(item, out bool refresh);
-            if (refresh)
-            {
-                InvUI.Ins.Refresh();
-            }
-            return false;
+            //Inventory.PushItem(item, out bool refresh);
+            //if (refresh)
+            //{
+            //    InvUI.Ins.Refresh();
+            //}
+            //return false;
             if (!ignoreSelfInfluence)
             {
                 ignoreSelfInfluence = true;
@@ -35,7 +35,7 @@ namespace LargerInventory.BackEnd
                 ignoreSelfInfluence = false;
                 if (!status.CanTakeItem)
                 {
-                    Inventory.PushItem(item, out  refresh);
+                    Inventory.PushItem(item, out bool refresh);
                     if (refresh)
                     {
                         InvUI.Ins.Refresh();
