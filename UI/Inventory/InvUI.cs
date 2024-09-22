@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
+using Terraria.ID;
 using Terraria.UI;
 using Inv = LargerInventory.BackEnd.Inventory;
 
@@ -20,6 +21,8 @@ public partial class InvUI : UIState
     private Vector2 oldPos;
     private UIView view;
     private UIPanel bg;
+    internal bool needRefresh;
+
     public override void OnInitialize()
     {
         bg = new()
@@ -112,6 +115,11 @@ public partial class InvUI : UIState
     public override void Update(GameTime gt)
     {
         base.Update(gt);
+        if (needRefresh)
+        {
+            Refresh();
+            needRefresh = false;
+        }
         if (dragging)
         {
             if (!Main.mouseLeft)
@@ -141,16 +149,16 @@ public partial class InvUI : UIState
     public void Refresh(Predicate<Item> condition = null)
     {
         view.Clear();
+        UIInvSlot Empty = new(ItemID.None, -1);
         foreach (int type in Items.Keys)
         {
             Item[] array = [.. Items[type]];
             int count = array.Length;
             for (int index = 0; index < count; index++)
             {
-                Item item = Items[type][index];
-                if (condition?.Invoke(item) != false)
+                if (condition?.Invoke(Items[type][index]) != false)
                 {
-                    UIInvSlot slot = new(item, index);
+                    UIInvSlot slot = new(type, index);
                     view.Add(slot);
                 }
             }

@@ -220,15 +220,6 @@ namespace LargerInventory.BackEnd
             ItemLoader.OnStack(item, target, move);
             return move;
         }
-        public static bool ExchangeItems(ref Item item, int index)
-        {
-            if (!_items.TryGetValue(item.type, out List<Item> container) || !container.IndexInRange(index))
-            {
-                return false;
-            }
-            (item, container[index]) = (container[index], item);
-            return true;
-        }
         public static bool PopItems(int type, int index, [NotNullWhen(true)] out Item item)
         {
             item = null;
