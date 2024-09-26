@@ -154,27 +154,27 @@ namespace LargerInventory.BackEnd
             container.AddRange(splitedItems);
             WriteCache(item.type);
         }
-        public static bool PutItemToDesignatedIndex(Item item, int index)
+        public static int PutItemToDesignatedIndex(Item item, int index)
         {
             if (!_items.TryGetValue(item.type, out List<Item> container) || !container.IndexInRange(index))
             {
-                return false;
+                return -1;
             }
             Item target = container[index];
             if (!ItemLoader.CanStack(target, item))
             {
-                return false;
+                return -1;
             }
             int move = Math.Min(target.maxStack - target.stack, item.stack);
             if (move == 0)
             {
-                return false;
+                return 0;
             }
             ItemLoader.OnStack(target, item, move);
             item.stack -= move;
             target.stack += move;
             WriteCache(item.type);
-            return true;
+            return move;
         }
         public static int PickItem(Item item, int count)
         {

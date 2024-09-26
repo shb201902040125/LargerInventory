@@ -149,7 +149,8 @@ public partial class InvUI : UIState
     public void Refresh(Predicate<Item> condition = null)
     {
         view.Clear();
-        UIInvSlot Empty = new(ItemID.None, -1);
+        Inv.CompressAllItems();
+        int slotCount = 0;
         foreach (int type in Items.Keys)
         {
             Item[] array = [.. Items[type]];
@@ -160,8 +161,17 @@ public partial class InvUI : UIState
                 {
                     UIInvSlot slot = new(type, index);
                     view.Add(slot);
+                    slotCount++;
                 }
             }
+        }
+        var slotCountPerRow = (view.Width.Pixels - 10) / 62;
+        int needCount = (int)(Math.Ceiling(slotCount / slotCountPerRow) * slotCountPerRow);
+        while (slotCount < needCount)
+        {
+            UIInvSlot Empty = new(ItemID.None, -1);
+            view.Add(Empty);
+            slotCount++;
         }
         view.Recalculate();
     }

@@ -22,7 +22,7 @@ namespace LargerInventory.BackEnd
             {
                 if (Inventory._items.Count == 0)
                 {
-                    for (int i = 0; i < 20; i++)
+                    for (int i = 0; i < 30; i++)
                     {
                         Inventory.PushItem(new Item(Main.rand.Next(ItemID.Count), 1), out _);
                     }
@@ -40,7 +40,7 @@ namespace LargerInventory.BackEnd
             Main.chatMonitor.Clear();
             foreach(var pair in Inventory._items)
             {
-                Main.NewText(Lang.GetItemName(pair.Key) + ":[" + string.Join(", ", pair.Value.ConvertAll(item => item.stack)) + "]");
+                Main.NewText($"[i:{pair.Key}]\t"+string.Join(", ", pair.Value.ConvertAll(item =>$"[i:{item.type}]:{item.stack}")));
             }
             Inventory.TryHealLife(Player);
             Inventory.TryHealMana(Player);
