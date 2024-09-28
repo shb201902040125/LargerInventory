@@ -1,9 +1,11 @@
 ﻿using LargerInventory.UI.Inventory;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SML.Physics;
 using System;
 using System.ComponentModel;
 using Terraria;
+using Terraria.GameInput;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.UI;
@@ -36,12 +38,11 @@ namespace LargerInventory.UI.ExtraUI
         }
         public override void LeftMouseDown(UIMouseEvent evt)
         {
-            if (Main.GameUpdateCount - lastLeftTime > 1)
+            //右键优先级高于左键
+            if (rightKeepTime > 0)
             {
-                leftKeepTime = 0;
+                return;
             }
-            lastLeftTime = Main.GameUpdateCount;
-            leftKeepTime++;
             if (leftKeepTime < 15)
             {
                 return;
@@ -54,6 +55,11 @@ namespace LargerInventory.UI.ExtraUI
         }
         public override void LeftMouseUp(UIMouseEvent evt)
         {
+            //右键优先级高于左键
+            if (rightKeepTime > 0)
+            {
+                return;
+            }
             if (leftKeepTime > 15)
             {
                 return;
@@ -68,7 +74,7 @@ namespace LargerInventory.UI.ExtraUI
             if (Index == -1)
             {
                 temp = new();
-                (temp, Main.mouseItem) = (Main.mouseItem, item);
+                (temp, Main.mouseItem) = (Main.mouseItem, temp);
                 Inv.PushItem(temp, out refresh);
                 item = ContentSamples.ItemsByType[temp.type];
                 if (refresh)
@@ -98,12 +104,6 @@ namespace LargerInventory.UI.ExtraUI
         }
         public override void RightMouseDown(UIMouseEvent evt)
         {
-            if (Main.GameUpdateCount - lastRightTime > 1)
-            {
-                lastRightTime = 0;
-            }
-            lastRightTime = Main.GameUpdateCount;
-            rightKeepTime++;
             if (rightKeepTime < 15)
             {
                 return;
@@ -162,6 +162,34 @@ namespace LargerInventory.UI.ExtraUI
             if (CheckThisSlotAccessibleInInv(out var itemInInv))
             {
                 Inv.PickItemFromDesignatedIndex(Main.mouseItem, Index, itemInInv.stack / 2);
+            }
+        }
+        public override void Update(GameTime gameTime)
+        {
+            //这个位置你看看对吗？我不确定mouseX是屏幕坐标还是世界坐标
+            Vector2 mousePos = new(Main.mouseX, Main.mouseY);
+            var dimension = GetDimensions();
+            SMRectangle uiZone = new(dimension.X, dimension.Y, dimension.Width, dimension.Height);
+            if(uiZone.Contains(mousePos))
+            {
+                if(PlayerInput.Triggers.Current.MouseLeft)
+                {
+                    if(Main.GameUpdateCount-lastLeftTime>1)
+                    {
+                        leftKeepTime = 0;
+                    }
+                    lastLeftTime = Main.GameUpdateCount;
+                    leftKeepTime++;
+                }
+                if (PlayerInput.Triggers.Current.MouseRight)
+                {
+                    if (Main.GameUpdateCount - lastRightTime > 1)
+                    {
+                        rightKeepTime = 0;
+                    }
+                    lastRightTime = Main.GameUpdateCount;
+                    rightKeepTime++;
+                }
             }
         }
         protected override void DrawSelf(SpriteBatch sb)

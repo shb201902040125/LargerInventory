@@ -108,6 +108,33 @@ namespace LargerInventory.BackEnd
                 healMana[item] = item.healMana;
             }
         }
+        private static void SureItemType(int type, Item item, bool keepStack = false, bool keepPrefix = false, bool keepFavorited = false, bool keepNewAndShiny = false)
+        {
+            if (item.type != type)
+            {
+                var cacheStack = item.stack;
+                var cachePrefix = item.prefix;
+                var cacheFavorited = item.favorited;
+                var cacheNewAndShiny = item.newAndShiny;
+                item.SetDefaults(type);
+                if (keepStack)
+                {
+                    item.stack = Math.Min(cacheStack, item.maxStack);
+                }
+                if (keepPrefix)
+                {
+                    item.Prefix(cachePrefix);
+                }
+                if (keepFavorited)
+                {
+                    item.favorited = cacheFavorited;
+                }
+                if (keepNewAndShiny)
+                {
+                    item.newAndShiny = cacheNewAndShiny;
+                }
+            }
+        }
         public static void PushItem(Item item, out bool refresh)
         {
             refresh = false;
@@ -118,6 +145,7 @@ namespace LargerInventory.BackEnd
             int count = container.Count;
             foreach (Item target in container)
             {
+                SureItemType(item.type, target);
                 if (ItemLoader.CanStack(target, item))
                 {
                     int move = Math.Min(target.maxStack - target.stack, item.stack);
@@ -161,6 +189,7 @@ namespace LargerInventory.BackEnd
                 return -1;
             }
             Item target = container[index];
+            SureItemType(item.type, target);
             if (!ItemLoader.CanStack(target, item))
             {
                 return -1;
@@ -186,6 +215,7 @@ namespace LargerInventory.BackEnd
             int moved = 0;
             foreach (Item target in container)
             {
+                SureItemType(item.type, target);
                 int move = Math.Min(target.stack, count);
                 if (move == 0)
                 {
@@ -210,6 +240,7 @@ namespace LargerInventory.BackEnd
             }
             count = Math.Min(count, item.maxStack - item.stack);
             Item target = container[index];
+            SureItemType(item.type, target);
             int move = Math.Min(target.stack, count);
             if (move == 0)
             {
