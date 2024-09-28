@@ -1,8 +1,11 @@
-﻿using SML.Common;
+﻿using ReLogic.Threading;
+using SML.Common;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -11,14 +14,17 @@ namespace LargerInventory.BackEnd
 {
     internal static class Inventory
     {
-        internal static Dictionary<int, List<Item>> _items = [];
+        private static Dictionary<int, List<Item>> _items = [];
         private static NormalCache _cache = new();
         private static Item _fakeItem;
-        private static Queue<RecipeTask> _recipeTasks = [];
+        private static bool _uiLock = false;
+        private static object _lock = new();
 
         private const string CacheKey_CachedType = "cachedType";
         private const string CacheKey_HealLifeData = "healLifeData";
         private const string CacheKey_HealManaData = "healManaData";
+
+        public static int Count => _items.Values.Sum(items => items.Count);
 
         private static void SplitItem(Item item, List<Item> container)
         {
@@ -108,6 +114,73 @@ namespace LargerInventory.BackEnd
                 healMana[item] = item.healMana;
             }
         }
+        private static void CompressItemList(int type)
+        {
+            if (_items.TryGetValue(type, out List<Item> container))
+            {
+                CompressItems(container);
+            }
+        }
+        private static void CompressAllItems()
+        {
+            foreach (List<Item> items in _items.Values)
+            {
+                CompressItems(items);
+            }
+        }
+        private static KeyValuePair<Item, int> FindBestMatch(Dictionary<Item, int> data, int target)
+        {
+            return data.OrderBy(kvp => Math.Abs(kvp.Value - target))
+                .ThenBy(kvp => kvp.Value)
+                .ThenBy(kvp => kvp.Key.value)
+                .ThenBy(kvp => kvp.Key.type)
+                .First();
+        }
+        public static void TryHealLife(Player player)
+        {
+            if (_uiLock)
+            {
+                return;
+            }
+            if (player.potionDelay > 0)
+            {
+                return;
+            }
+            float rate = player.statLife / (float)player.statLifeMax2;
+            if (rate > LIConfigs.Instance.AutoUseLifePotion)
+            {
+                return;
+            }
+            int cure = player.statLifeMax2 - player.statLife;
+            KeyValuePair<Item, int> bestMatch = FindBestMatch(GetOrCreateCache<Dictionary<Item, int>>(CacheKey_HealLifeData), cure);
+            _fakeItem ??= new();
+            _fakeItem.SetDefaults(bestMatch.Key.type);
+            PickItem(_fakeItem, 1);
+            player.ApplyLifeAndOrMana(_fakeItem);
+        }
+        public static void TryHealMana(Player player)
+        {
+            if (_uiLock)
+            {
+                return;
+            }
+            if (player.potionDelay > 0)
+            {
+                return;
+            }
+            float rate = player.statMana / (float)player.statManaMax2;
+            if (rate > LIConfigs.Instance.AutoUseManaPotion)
+            {
+                return;
+            }
+            int cure = player.statManaMax2 - player.statMana;
+            KeyValuePair<Item, int> bestMatch = FindBestMatch(GetOrCreateCache<Dictionary<Item, int>>(CacheKey_HealManaData), cure);
+            _fakeItem ??= new();
+            _fakeItem.SetDefaults(bestMatch.Key.type);
+            PickItem(_fakeItem, 1);
+            player.ApplyLifeAndOrMana(_fakeItem);
+        }
+
         private static void SureItemType(int type, Item item, bool keepStack = false, bool keepPrefix = false, bool keepFavorited = false, bool keepNewAndShiny = false)
         {
             if (item.type != type)
@@ -137,6 +210,11 @@ namespace LargerInventory.BackEnd
         }
         public static void PushItem(Item item, out bool refresh)
         {
+            if(_uiLock)
+            {
+                refresh = false;
+                return;
+            }
             refresh = false;
             if (!_items.TryGetValue(item.type, out List<Item> container))
             {
@@ -173,6 +251,10 @@ namespace LargerInventory.BackEnd
         }
         public static void PushItemToEnd(Item item)
         {
+            if (_uiLock)
+            {
+                return;
+            }
             if (!_items.TryGetValue(item.type, out List<Item> container))
             {
                 _items[item.type] = container = [];
@@ -184,6 +266,10 @@ namespace LargerInventory.BackEnd
         }
         public static int PutItemToDesignatedIndex(Item item, int index)
         {
+            if (_uiLock)
+            {
+                return 0;
+            }
             if (!_items.TryGetValue(item.type, out List<Item> container) || !container.IndexInRange(index))
             {
                 return -1;
@@ -207,6 +293,10 @@ namespace LargerInventory.BackEnd
         }
         public static int PickItem(Item item, int count)
         {
+            if (_uiLock)
+            {
+                return 0;
+            }
             if (!_items.TryGetValue(item.type, out List<Item> container))
             {
                 return 0;
@@ -234,6 +324,10 @@ namespace LargerInventory.BackEnd
         }
         public static int PickItemFromDesignatedIndex(Item item, int index, int count)
         {
+            if (_uiLock)
+            {
+                return 0;
+            }
             if (!_items.TryGetValue(item.type, out List<Item> container) || !container.IndexInRange(index))
             {
                 return 0;
@@ -254,6 +348,10 @@ namespace LargerInventory.BackEnd
         public static bool PopItems(int type, int index, [NotNullWhen(true)] out Item item)
         {
             item = null;
+            if (_uiLock)
+            {
+                return false;
+            }
             if (!_items.TryGetValue(type, out List<Item> container) || container.IndexInRange(index))
             {
                 return false;
@@ -262,75 +360,72 @@ namespace LargerInventory.BackEnd
             container.RemoveAt(index);
             return true;
         }
-        public static void CompressItemList(int type)
+
+        public static DisposeWapper<UICallbackInfo> GetItemsForUI(params Predicate<Item>[] filters)
         {
-            if (_items.TryGetValue(type, out List<Item> container))
+            if (_uiLock)
             {
-                CompressItems(container);
+                throw new InvalidOperationException("The last UI lock was not unlocked.");
+            }
+            lock (_lock)
+            {
+                _uiLock = true;
+            }
+            List<int> types = [.. _items.Keys];
+            types.Sort();
+            Dictionary<int, List<Item>> result = [];
+            Parallel.ForEach(_items.Keys, type =>
+            {
+                var selected = from Item item in _items[type] where filters.All(filter => filter(item)) select item;
+                if (selected.Any())
+                {
+                    result.Add(type, selected.ToList());
+                }
+            });
+            DisposeWapper<UICallbackInfo> disposeWapper = new(new(result, true), AfterUIReleasesControl);
+            return disposeWapper;
+        }
+        private static void AfterUIReleasesControl(UICallbackInfo info)
+        {
+            HashSet<int> referredTypes = [.. info.Items.Keys];
+            foreach (var type in info.Items.Keys)
+            {
+                for(int i = 0; i < _items[type].Count;i++)
+                {
+                    var item = _items[type][i];
+                    if (item.IsAir || item.type == type)
+                    {
+                        continue;
+                    }
+                    referredTypes.Add(item.type);
+                    if (!_items.TryGetValue(item.type, out var container))
+                    {
+                        container = _items[type] = [];
+                    }
+                    container.Add(item);
+                    _items[type][i] = new();
+                }
+            }
+            if (info.Compress)
+            {
+                foreach (var type in referredTypes)
+                {
+                    CompressItemList(type);
+                }
+            }
+            lock (_lock)
+            {
+                _uiLock = false;
             }
         }
-        public static void CompressAllItems()
+        public class UICallbackInfo
         {
-            foreach (List<Item> items in _items.Values)
+            public readonly Dictionary<int, List<Item>> Items;
+            public bool Compress;
+            internal UICallbackInfo(Dictionary<int, List<Item>> items, bool compress = false)
             {
-                CompressItems(items);
-            }
-        }
-        private static KeyValuePair<Item, int> FindBestMatch(Dictionary<Item, int> data, int target)
-        {
-            return data.OrderBy(kvp => Math.Abs(kvp.Value - target))
-                .ThenBy(kvp => kvp.Value)
-                .ThenBy(kvp => kvp.Key.value)
-                .ThenBy(kvp => kvp.Key.type)
-                .First();
-        }
-        public static void TryHealLife(Player player)
-        {
-            if (player.potionDelay > 0)
-            {
-                return;
-            }
-            float rate = player.statLife / (float)player.statLifeMax2;
-            if (rate > LIConfigs.Instance.AutoUseLifePotion)
-            {
-                return;
-            }
-            int cure = player.statLifeMax2 - player.statLife;
-            KeyValuePair<Item, int> bestMatch = FindBestMatch(GetOrCreateCache<Dictionary<Item, int>>(CacheKey_HealLifeData), cure);
-            _fakeItem ??= new();
-            _fakeItem.SetDefaults(bestMatch.Key.type);
-            _fakeItem.stack = 0;
-            PickItem(_fakeItem, 1);
-            player.ApplyLifeAndOrMana(_fakeItem);
-        }
-        public static void TryHealMana(Player player)
-        {
-            if (player.potionDelay > 0)
-            {
-                return;
-            }
-            float rate = player.statMana / (float)player.statManaMax2;
-            if (rate > LIConfigs.Instance.AutoUseManaPotion)
-            {
-                return;
-            }
-            int cure = player.statManaMax2 - player.statMana;
-            KeyValuePair<Item, int> beatMatch = FindBestMatch(GetOrCreateCache<Dictionary<Item, int>>(CacheKey_HealManaData), cure);
-            _fakeItem ??= new();
-            _fakeItem.SetDefaults(beatMatch.Key.type);
-            _fakeItem.stack = 0;
-            PickItem(_fakeItem, 1);
-            player.ApplyLifeAndOrMana(_fakeItem);
-        }
-        public static void HandleRecipeTasks()
-        {
-            if (!_recipeTasks.TryDequeue(out var task))
-            {
-                return;
-            }
-            if(!task.Update(_items))
-            {
-                _recipeTasks.Enqueue(task);
+                Items = items;
+                Compress = compress;
             }
         }
     }

@@ -16,12 +16,12 @@ public partial class InvUI : UIState
 {
     internal static InvUI Ins { get; private set; }
     public InvUI() => Ins = this;
-    private static Dictionary<int, List<Item>> Items => Inv._items;
     private bool dragging;
     private Vector2 oldPos;
     private UIView view;
     private UIPanel bg;
     internal bool needRefresh;
+    internal SML.Common.DisposeWapper<Inv.UICallbackInfo> InvDisposeWapper;
 
     public override void OnInitialize()
     {
@@ -149,8 +149,11 @@ public partial class InvUI : UIState
     public void Refresh(Predicate<Item> condition = null)
     {
         view.Clear();
-        Inv.CompressAllItems();
         int slotCount = 0;
+        InvDisposeWapper?.Dispose();
+        InvDisposeWapper = Inv.GetItemsForUI(condition);
+        InvDisposeWapper.Value.Compress = true;
+        var Items = InvDisposeWapper.Value.Items;
         foreach (int type in Items.Keys)
         {
             Item[] array = [.. Items[type]];
@@ -159,7 +162,7 @@ public partial class InvUI : UIState
             {
                 if (condition?.Invoke(Items[type][index]) != false)
                 {
-                    UIInvSlot slot = new(type, index);
+                    UIInvSlot slot = new(Items[type][index]);
                     view.Add(slot);
                     slotCount++;
                 }
@@ -167,11 +170,17 @@ public partial class InvUI : UIState
         }
         var slotCountPerRow = (view.Width.Pixels - 10) / 62;
         int needCount = (int)(Math.Ceiling(slotCount / slotCountPerRow) * slotCountPerRow);
-        while (slotCount < needCount)
+        if (needCount > slotCount)
         {
-            UIInvSlot Empty = new(ItemID.None, -1);
-            view.Add(Empty);
-            slotCount++;
+            Items[ItemID.None] = [];
+            while (slotCount < needCount)
+            {
+                Item item = new();
+                Items[ItemID.None].Add(item);
+                UIInvSlot Empty = new(item);
+                view.Add(Empty);
+                slotCount++;
+            }
         }
         view.Recalculate();
     }

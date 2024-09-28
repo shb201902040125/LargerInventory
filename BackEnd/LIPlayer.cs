@@ -20,7 +20,7 @@ namespace LargerInventory.BackEnd
         {
             if (SwitchInv.JustPressed)
             {
-                if (Inventory._items.Count == 0)
+                if (Inventory.Count == 0)
                 {
                     for (int i = 0; i < 30; i++)
                     {
@@ -37,11 +37,6 @@ namespace LargerInventory.BackEnd
         }
         public override void PostUpdate()
         {
-            Main.chatMonitor.Clear();
-            foreach(var pair in Inventory._items)
-            {
-                Main.NewText($"[i:{pair.Key}]\t"+string.Join(", ", pair.Value.ConvertAll(item =>$"[i:{item.type}]:{item.stack}")));
-            }
             Inventory.TryHealLife(Player);
             Inventory.TryHealMana(Player);
         }
