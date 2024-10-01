@@ -12,7 +12,7 @@ using Terraria.ModLoader;
 
 namespace LargerInventory.BackEnd
 {
-    internal static class Inventory
+    public static class Inventory
     {
         private static Dictionary<int, List<Item>> _items = [];
         private static NormalCache _cache = new();
@@ -210,7 +210,7 @@ namespace LargerInventory.BackEnd
         }
         public static void PushItem(Item item, out bool refresh)
         {
-            if(_uiLock)
+            if (_uiLock)
             {
                 refresh = false;
                 return;
@@ -249,20 +249,28 @@ namespace LargerInventory.BackEnd
             refresh = count != container.Count;
             WriteCache(item.type);
         }
-        public static void PushItemToEnd(Item item)
+        public static int PushItemToEnd(Item item, bool splitIfOverflow = true)
         {
             if (_uiLock)
             {
-                return;
+                return -1;
             }
             if (!_items.TryGetValue(item.type, out List<Item> container))
             {
                 _items[item.type] = container = [];
             }
-            List<Item> splitedItems = [];
-            SplitItem(item, splitedItems);
-            container.AddRange(splitedItems);
+            if (splitIfOverflow && item.stack > item.maxStack)
+            {
+                List<Item> splitedItems = [];
+                SplitItem(item, splitedItems);
+                container.AddRange(splitedItems);
+            }
+            else
+            {
+                container.Add(item);
+            }
             WriteCache(item.type);
+            return container.Count - 1;
         }
         public static int PutItemToDesignatedIndex(Item item, int index)
         {
@@ -361,71 +369,83 @@ namespace LargerInventory.BackEnd
             return true;
         }
 
-        public static DisposeWapper<UICallbackInfo> GetItemsForUI(params Predicate<Item>[] filters)
+        public static Dictionary<int, List<InfoForUI>> GetInfoForUIs(params Predicate<Item>[] predicates)
         {
-            if (_uiLock)
+            predicates ??= [DefaultPredicate_GetInfoForUIs];
+            Dictionary<int, List<InfoForUI>> result = [];
+            foreach(var type in _items.Keys)
             {
-                throw new InvalidOperationException("The last UI lock was not unlocked.");
-            }
-            lock (_lock)
-            {
-                _uiLock = true;
-            }
-            List<int> types = [.. _items.Keys];
-            types.Sort();
-            Dictionary<int, List<Item>> result = [];
-            Parallel.ForEach(_items.Keys, type =>
-            {
-                var selected = from Item item in _items[type] where filters.All(filter => filter(item)) select item;
-                if (selected.Any())
-                {
-                    result.Add(type, selected.ToList());
-                }
-            });
-            DisposeWapper<UICallbackInfo> disposeWapper = new(new(result, true), AfterUIReleasesControl);
-            return disposeWapper;
-        }
-        private static void AfterUIReleasesControl(UICallbackInfo info)
-        {
-            HashSet<int> referredTypes = [.. info.Items.Keys];
-            foreach (var type in info.Items.Keys)
-            {
+                var list = result[type] = [];
                 for(int i = 0; i < _items[type].Count;i++)
                 {
                     var item = _items[type][i];
-                    if (item.IsAir || item.type == type)
+                    if (predicates.All(p => p?.Invoke(item) ?? true))
                     {
-                        continue;
+                        list.Add(new InfoForUI(type, i, item));
                     }
-                    referredTypes.Add(item.type);
-                    if (!_items.TryGetValue(item.type, out var container))
-                    {
-                        container = _items[type] = [];
-                    }
-                    container.Add(item);
-                    _items[type][i] = new();
                 }
-            }
-            if (info.Compress)
-            {
-                foreach (var type in referredTypes)
-                {
-                    CompressItemList(type);
-                }
-            }
-            lock (_lock)
-            {
-                _uiLock = false;
-            }
+            };
+            return result;
         }
-        public class UICallbackInfo
+        private static bool DefaultPredicate_GetInfoForUIs(Item item)
         {
-            public readonly Dictionary<int, List<Item>> Items;
-            public bool Compress;
-            internal UICallbackInfo(Dictionary<int, List<Item>> items, bool compress = false)
+            return true;
+        }
+        public class InfoForUI
+        {
+            public InfoForUI(int type, int index, Item item)
             {
-                Items = items;
-                Compress = compress;
+                Type = type;
+                Index = index;
+                Item = item;
+            }
+            internal int Type { get; private set; }
+            internal int Index { get; private set; }
+            internal Item Item { get; private set; }
+            internal void Changed(Item newItem)
+            {
+                if (!_items.TryGetValue(Type, out var list) || !list.IndexInRange(Index))
+                {
+                    Type = Item.type;
+                    Index = PushItemToEnd(newItem);
+                    Item = newItem;
+                    return;
+                }
+                if (newItem == Item)
+                {
+                    if (newItem.IsAir)
+                    {
+                        if (newItem.type != Type)
+                        {
+                            _items[Type][Index] = new(Type, 0);
+                        }
+                        return;
+                    }
+                    if(newItem.type != Type)
+                    {
+                        _items[Type][Index] = new(Type, 0);
+                        Type = newItem.type;
+                        Index = PushItemToEnd(newItem, false);
+                        Item = _items[Type][Index];
+                    }
+                }
+                else
+                {
+                    if (newItem.IsAir)
+                    {
+                        _items[Type][Index] = new(Type, 0);
+                        return;
+                    }
+                    if (newItem.type != Type)
+                    {
+                        _items[Type][Index] = new(Type, 0);
+                        Type = newItem.type;
+                        Index = PushItemToEnd(newItem, false);
+                        Item = newItem;
+                        return;
+                    }
+                    _items[Type][Index] = newItem;
+                }
             }
         }
     }

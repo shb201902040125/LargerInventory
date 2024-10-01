@@ -21,7 +21,6 @@ public partial class InvUI : UIState
     private UIView view;
     private UIPanel bg;
     internal bool needRefresh;
-    internal SML.Common.DisposeWapper<Inv.UICallbackInfo> InvDisposeWapper;
 
     public override void OnInitialize()
     {
@@ -150,34 +149,23 @@ public partial class InvUI : UIState
     {
         view.Clear();
         int slotCount = 0;
-        InvDisposeWapper?.Dispose();
-        InvDisposeWapper = Inv.GetItemsForUI(condition);
-        InvDisposeWapper.Value.Compress = true;
-        var Items = InvDisposeWapper.Value.Items;
+        var Items = Inv.GetInfoForUIs(condition);
         foreach (int type in Items.Keys)
         {
-            Item[] array = [.. Items[type]];
-            int count = array.Length;
-            for (int index = 0; index < count; index++)
+            foreach (var info in Items[type])
             {
-                if (condition?.Invoke(Items[type][index]) != false)
-                {
-                    UIInvSlot slot = new(Items[type][index]);
-                    view.Add(slot);
-                    slotCount++;
-                }
+                UIInvSlot slot = new(info);
+                view.Add(slot);
+                slotCount++;
             }
         }
         var slotCountPerRow = (view.Width.Pixels - 10) / 62;
         int needCount = (int)(Math.Ceiling(slotCount / slotCountPerRow) * slotCountPerRow);
         if (needCount > slotCount)
         {
-            Items[ItemID.None] = [];
             while (slotCount < needCount)
             {
-                Item item = new();
-                Items[ItemID.None].Add(item);
-                UIInvSlot Empty = new(item);
+                UIInvSlot Empty = new(new(-1, -1, new()));
                 view.Add(Empty);
                 slotCount++;
             }

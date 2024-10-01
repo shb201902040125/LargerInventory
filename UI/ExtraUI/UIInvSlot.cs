@@ -15,16 +15,24 @@ namespace LargerInventory.UI.ExtraUI
 {
     public class UIInvSlot : UIElement
     {
-        public Item item;
-        public bool InLock { get; private set; }
-        uint lastLeftTime, lastRightTime;
-        int leftKeepTime, rightKeepTime;
-        public UIInvSlot(Item item)
+        Inv.InfoForUI Info;
+        public UIInvSlot(Inv.InfoForUI info)
         {
+            Info = info;
             this.SetSize(52, 52);
+        }
+        public override void Update(GameTime gameTime)
+        {
+            if (IsMouseHovering)
+            {
+                var item = Info.Item;
+                ItemSlot.Handle(ref item, ItemSlot.Context.InventoryItem);
+                Info.Changed(item);
+            }
         }
         protected override void DrawSelf(SpriteBatch sb)
         {
+            var item = Info.Item;
             ItemSlot.Draw(sb, ref item, 0, GetDimensions().ToRectangle().TopLeft());
         }
     }
