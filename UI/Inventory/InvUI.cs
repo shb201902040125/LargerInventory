@@ -2,11 +2,10 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections.Generic;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
-using Terraria.ID;
+using Terraria.GameInput;
 using Terraria.UI;
 using Inv = LargerInventory.BackEnd.Inventory;
 
@@ -114,6 +113,11 @@ public partial class InvUI : UIState
     public override void Update(GameTime gt)
     {
         base.Update(gt);
+        if (IsMouseHovering)
+        {
+            PlayerInput.LockVanillaMouseScroll(GetType().FullName);
+            Main.LocalPlayer.mouseInterface = true;
+        }
         if (needRefresh)
         {
             Refresh();
