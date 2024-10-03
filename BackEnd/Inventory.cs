@@ -17,8 +17,6 @@ namespace LargerInventory.BackEnd
         private static Dictionary<int, List<Item>> _items = [];
         private static NormalCache _cache = new();
         private static Item _fakeItem;
-        private static bool _uiLock = false;
-        private static object _lock = new();
 
         private const string CacheKey_CachedType = "cachedType";
         private const string CacheKey_HealLifeData = "healLifeData";
@@ -138,10 +136,6 @@ namespace LargerInventory.BackEnd
         }
         public static void TryHealLife(Player player)
         {
-            if (_uiLock)
-            {
-                return;
-            }
             if (player.potionDelay > 0)
             {
                 return;
@@ -160,10 +154,6 @@ namespace LargerInventory.BackEnd
         }
         public static void TryHealMana(Player player)
         {
-            if (_uiLock)
-            {
-                return;
-            }
             if (player.potionDelay > 0)
             {
                 return;
@@ -210,11 +200,6 @@ namespace LargerInventory.BackEnd
         }
         public static void PushItem(Item item, out bool refresh)
         {
-            if (_uiLock)
-            {
-                refresh = false;
-                return;
-            }
             refresh = false;
             if (!_items.TryGetValue(item.type, out List<Item> container))
             {
@@ -251,14 +236,11 @@ namespace LargerInventory.BackEnd
         }
         public static int PushItemToEnd(Item item, bool splitIfOverflow = true)
         {
-            if (_uiLock)
-            {
-                return -1;
-            }
             if (!_items.TryGetValue(item.type, out List<Item> container))
             {
                 _items[item.type] = container = [];
             }
+            int result = container.Count;
             if (splitIfOverflow && item.stack > item.maxStack)
             {
                 List<Item> splitedItems = [];
@@ -270,14 +252,57 @@ namespace LargerInventory.BackEnd
                 container.Add(item);
             }
             WriteCache(item.type);
-            return container.Count - 1;
+            return result;
+        }
+        public static int PushItemToFirstEmptySlot(Item item, bool splitIfOverflow = true)
+        {
+            if (!_items.TryGetValue(item.type, out List<Item> container))
+            {
+                _items[item.type] = container = [];
+            }
+            int index = -1;
+            for (int i = 0; i < container.Count; i++)
+            {
+                if(container[i].IsAir)
+                {
+                    index = i; 
+                    break;
+                }
+            }
+            int result;
+            if (index == -1)
+            {
+                result = container.Count;
+                if (splitIfOverflow && item.stack > item.maxStack)
+                {
+                    List<Item> splitedItems = [];
+                    SplitItem(item, splitedItems);
+                    container.AddRange(splitedItems);
+                }
+                else
+                {
+                    container.Add(item);
+                }
+                WriteCache(item.type);
+                return result;
+            }
+            result = index;
+            if (splitIfOverflow && item.stack > item.maxStack)
+            {
+                List<Item> splitedItems = [];
+                SplitItem(item, splitedItems);
+                container[index] = splitedItems[0];
+                container.AddRange(splitedItems[1..]);
+            }
+            else
+            {
+                container[index] = item;
+            }
+            WriteCache(item.type);
+            return result;
         }
         public static int PutItemToDesignatedIndex(Item item, int index)
         {
-            if (_uiLock)
-            {
-                return 0;
-            }
             if (!_items.TryGetValue(item.type, out List<Item> container) || !container.IndexInRange(index))
             {
                 return -1;
@@ -301,10 +326,6 @@ namespace LargerInventory.BackEnd
         }
         public static int PickItem(Item item, int count)
         {
-            if (_uiLock)
-            {
-                return 0;
-            }
             if (!_items.TryGetValue(item.type, out List<Item> container))
             {
                 return 0;
@@ -332,10 +353,6 @@ namespace LargerInventory.BackEnd
         }
         public static int PickItemFromDesignatedIndex(Item item, int index, int count)
         {
-            if (_uiLock)
-            {
-                return 0;
-            }
             if (!_items.TryGetValue(item.type, out List<Item> container) || !container.IndexInRange(index))
             {
                 return 0;
@@ -356,10 +373,6 @@ namespace LargerInventory.BackEnd
         public static bool PopItems(int type, int index, [NotNullWhen(true)] out Item item)
         {
             item = null;
-            if (_uiLock)
-            {
-                return false;
-            }
             if (!_items.TryGetValue(type, out List<Item> container) || container.IndexInRange(index))
             {
                 return false;
@@ -407,7 +420,7 @@ namespace LargerInventory.BackEnd
                 if (!_items.TryGetValue(Type, out var list) || !list.IndexInRange(Index))
                 {
                     Type = Item.type;
-                    Index = PushItemToEnd(newItem);
+                    Index = PushItemToFirstEmptySlot(newItem);
                     Item = newItem;
                     return;
                 }
@@ -425,7 +438,7 @@ namespace LargerInventory.BackEnd
                     {
                         _items[Type][Index] = new(Type, 0);
                         Type = newItem.type;
-                        Index = PushItemToEnd(newItem, false);
+                        Index = PushItemToFirstEmptySlot(newItem);
                         Item = _items[Type][Index];
                     }
                 }
@@ -440,7 +453,7 @@ namespace LargerInventory.BackEnd
                     {
                         _items[Type][Index] = new(Type, 0);
                         Type = newItem.type;
-                        Index = PushItemToEnd(newItem, false);
+                        Index = PushItemToFirstEmptySlot(newItem);
                         Item = newItem;
                         return;
                     }
