@@ -34,7 +34,8 @@ namespace LargerInventory.UI.ExtraUI
                 source.stack--;
                 if (source.stack == 0)
                 {
-                    Info.Changed(new());
+                    Item temp = new();
+                    Info.Changed(ref temp);
                     return;
                 }
                 rightDown = true;
@@ -45,7 +46,8 @@ namespace LargerInventory.UI.ExtraUI
                 source.stack--;
                 if (source.stack == 0)
                 {
-                    Info.Changed(new());
+                    Item temp = new();
+                    Info.Changed(ref temp);
                     return;
                 }
                 rightDown = true;
@@ -56,7 +58,7 @@ namespace LargerInventory.UI.ExtraUI
         {
             Item item = Info.Item;
             (Main.mouseItem, item) = (item, Main.mouseItem);
-            Info.Changed(item);
+            Info.Changed(ref item, false);
         }
 
         public override void Update(GameTime gameTime)
@@ -85,11 +87,12 @@ namespace LargerInventory.UI.ExtraUI
                         source.stack -= count;
                         if (source.stack <= 0)
                         {
-                            Info.Changed(new());
+                            Item temp = new();
+                            Info.Changed(ref temp);
                             time = 0;
                             return;
                         }
-                        Info.Changed(source);
+                        Info.Changed(ref source,false);
                     }
                 }
                 time++;

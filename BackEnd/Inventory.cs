@@ -263,9 +263,9 @@ namespace LargerInventory.BackEnd
             int index = -1;
             for (int i = 0; i < container.Count; i++)
             {
-                if(container[i].IsAir)
+                if (container[i].IsAir)
                 {
-                    index = i; 
+                    index = i;
                     break;
                 }
             }
@@ -386,10 +386,10 @@ namespace LargerInventory.BackEnd
         {
             predicates ??= [DefaultPredicate_GetInfoForUIs];
             Dictionary<int, List<InfoForUI>> result = [];
-            foreach(var type in _items.Keys)
+            foreach (var type in _items.Keys)
             {
                 var list = result[type] = [];
-                for(int i = 0; i < _items[type].Count;i++)
+                for (int i = 0; i < _items[type].Count; i++)
                 {
                     var item = _items[type][i];
                     if (predicates.All(p => p?.Invoke(item) ?? true))
@@ -415,13 +415,17 @@ namespace LargerInventory.BackEnd
             internal int Type { get; private set; }
             internal int Index { get; private set; }
             internal Item Item { get; private set; }
-            internal void Changed(Item newItem)
+            internal void Changed(ref Item newItem, bool clearNewItem = true)
             {
                 if (!_items.TryGetValue(Type, out var list) || !list.IndexInRange(Index))
                 {
                     Type = newItem.type;
                     Index = PushItemToFirstEmptySlot(newItem);
                     Item = newItem;
+                    if (clearNewItem)
+                    {
+                        newItem = new();
+                    }
                     return;
                 }
                 if (newItem == Item)
@@ -430,16 +434,21 @@ namespace LargerInventory.BackEnd
                     {
                         if (newItem.type != Type)
                         {
-                            _items[Type][Index] = new(Type, 0);
+                            Item = _items[Type][Index] = new(Type, 0);
+                            newItem = clearNewItem ? new() : Item;
                         }
                         return;
                     }
-                    if(newItem.type != Type)
+                    if (newItem.type != Type)
                     {
                         _items[Type][Index] = new(Type, 0);
                         Type = newItem.type;
                         Index = PushItemToFirstEmptySlot(newItem);
                         Item = _items[Type][Index];
+                        if(clearNewItem)
+                        {
+                            newItem = new();
+                        }
                     }
                 }
                 else
@@ -447,6 +456,7 @@ namespace LargerInventory.BackEnd
                     if (newItem.IsAir)
                     {
                         Item = _items[Type][Index] = new(Type, 0);
+                        newItem = clearNewItem ? new() : Item;
                         return;
                     }
                     if (newItem.type != Type)
@@ -455,11 +465,20 @@ namespace LargerInventory.BackEnd
                         Type = newItem.type;
                         Index = PushItemToFirstEmptySlot(newItem);
                         Item = newItem;
+                        if (clearNewItem)
+                        {
+                            newItem = new();
+                        }
                         return;
                     }
                     _items[Type][Index] = newItem;
                     Item = newItem;
+                    if (clearNewItem)
+                    {
+                        newItem = new();
+                    }
                 }
+                return;
             }
         }
     }

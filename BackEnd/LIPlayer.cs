@@ -24,7 +24,9 @@ namespace LargerInventory.BackEnd
                 {
                     for (int i = 0; i < 30; i++)
                     {
-                        Inventory.PushItem(new Item(Main.rand.Next(ItemID.Count), 1), out _);
+                        Item item = new Item(Main.rand.Next(ItemID.Count));
+                        item.stack = Main.rand.Next(1, item.maxStack);
+                        Inventory.PushItem(item, out _);
                     }
                 }
                 InvUI.Ins.Refresh();
