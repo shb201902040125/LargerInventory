@@ -419,7 +419,7 @@ namespace LargerInventory.BackEnd
             {
                 if (!_items.TryGetValue(Type, out var list) || !list.IndexInRange(Index))
                 {
-                    Type = Item.type;
+                    Type = newItem.type;
                     Index = PushItemToFirstEmptySlot(newItem);
                     Item = newItem;
                     return;
@@ -446,7 +446,7 @@ namespace LargerInventory.BackEnd
                 {
                     if (newItem.IsAir)
                     {
-                        _items[Type][Index] = new(Type, 0);
+                        Item = _items[Type][Index] = new(Type, 0);
                         return;
                     }
                     if (newItem.type != Type)
@@ -458,6 +458,7 @@ namespace LargerInventory.BackEnd
                         return;
                     }
                     _items[Type][Index] = newItem;
+                    Item = newItem;
                 }
             }
         }
