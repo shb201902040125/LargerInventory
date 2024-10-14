@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
@@ -175,5 +176,10 @@ public partial class InvUI : UIState
             }
         }
         view.Recalculate();
+    }
+    private List<UIItemFilter> CreateFilter()
+    {
+        List<UIItemFilter> filters = new();
+        return filters;
     }
 }

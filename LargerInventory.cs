@@ -2,10 +2,12 @@ using Terraria.ModLoader;
 
 namespace LargerInventory
 {
-    internal class LargerInventory : Mod
+    public class LargerInventory : Mod
     {
+        public static LargerInventory Ins;
         public override void Load()
         {
+            Ins = this;
         }
     }
 }
