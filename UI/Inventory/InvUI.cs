@@ -163,6 +163,9 @@ public partial class InvUI : UIState
             temp.Add(slot);
             slotCount++;
         }
+        temp = [.. temp.OrderBy(slot => slot.Info.Item.favorited)
+            .ThenBy(slot => slot.Info.Item.type)
+            .ThenByDescending(slot => slot.Info.Item.stack)];
         var slotCountPerRow = (view.Width.Pixels - 10) / 62;
         int needCount = (int)(Math.Ceiling(slotCount / slotCountPerRow) * slotCountPerRow);
         if (needCount > slotCount)
@@ -174,9 +177,6 @@ public partial class InvUI : UIState
                 slotCount++;
             }
         }
-        temp = [.. temp.OrderBy(slot => slot.Info.Item.favorited)
-            .ThenBy(slot => slot.Info.Item.type)
-            .ThenBy(slot => slot.Info.Item.stack)];
         temp.ForEach(view.Add);
         view.Recalculate();
     }
