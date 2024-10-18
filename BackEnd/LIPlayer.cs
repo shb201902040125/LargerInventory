@@ -29,7 +29,7 @@ namespace LargerInventory.BackEnd
                         Inventory.PushItem(item, out _);
                     }
                 }
-                InvUI.Ins.Refresh();
+                InvUI.Ins.CallRefresh();
                 LISystem.uif.IsVisible =! LISystem.uif.IsVisible;
                 /*InvUI inv = InvUI.Ins;
                 inv.RemoveAllChildren();
