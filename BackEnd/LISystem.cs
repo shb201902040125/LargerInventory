@@ -1,6 +1,5 @@
 ﻿using LargerInventory.UI.Inventory;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
@@ -22,12 +21,11 @@ namespace LargerInventory.BackEnd
         }
         public override void UpdateUI(GameTime gameTime)
         {
-            if (Main.LocalPlayer.controlInv && uif.IsVisible)
-            {
-                uif.IsVisible = false;
-            }
             //invUI.Update(gameTime);
-            uif.Update(gameTime);
+            if (uif.IsVisible)
+            {
+                uif.Update(gameTime);
+            }
             gt = gameTime;
         }
         public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
@@ -39,7 +37,10 @@ namespace LargerInventory.BackEnd
                    Mod.Name,
                    delegate
                    {
-                       uif.Draw(Main.spriteBatch, gt);
+                       if (uif.IsVisible)
+                       {
+                           uif.Draw(Main.spriteBatch, gt);
+                       }
                        return true;
                    },
                    InterfaceScaleType.UI)
