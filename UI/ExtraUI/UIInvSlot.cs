@@ -14,7 +14,7 @@ namespace LargerInventory.UI.ExtraUI
 {
     public class UIInvSlot : UIElement
     {
-        Inv.InfoForUI Info;
+        internal Inv.InfoForUI Info;
         bool rightDown;
         int time;
         public UIInvSlot(Inv.InfoForUI info)

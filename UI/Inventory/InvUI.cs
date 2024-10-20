@@ -3,6 +3,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
@@ -121,7 +123,7 @@ public partial class InvUI : UIState
         }
         if (needRefresh)
         {
-            Refresh();
+            CallRefresh();
             needRefresh = false;
         }
         if (dragging)
@@ -150,20 +152,20 @@ public partial class InvUI : UIState
         scale = old;
 
     }
-    public void Refresh(Predicate<Item> condition = null)
+    internal void Refresh(List<Inv.InfoForUI> items)
     {
         view.Clear();
         int slotCount = 0;
-        var Items = Inv.GetInfoForUIs(condition);
-        foreach (int type in Items.Keys)
+        List<UIInvSlot> temp = [];
+        foreach (var info in items)
         {
-            foreach (var info in Items[type])
-            {
-                UIInvSlot slot = new(info);
-                view.Add(slot);
-                slotCount++;
-            }
+            UIInvSlot slot = new(info);
+            temp.Add(slot);
+            slotCount++;
         }
+        temp = [.. temp.OrderBy(slot => slot.Info.Item.favorited)
+            .ThenBy(slot => slot.Info.Item.type)
+            .ThenByDescending(slot => slot.Info.Item.stack)];
         var slotCountPerRow = (view.Width.Pixels - 10) / 62;
         int needCount = (int)(Math.Ceiling(slotCount / slotCountPerRow) * slotCountPerRow);
         if (needCount > slotCount)
@@ -171,15 +173,24 @@ public partial class InvUI : UIState
             while (slotCount < needCount)
             {
                 UIInvSlot Empty = new(new(-1, -1, new()));
-                view.Add(Empty);
+                temp.Add(Empty);
                 slotCount++;
             }
         }
+        temp.ForEach(view.Add);
         view.Recalculate();
     }
     private List<UIItemFilter> CreateFilter()
     {
         List<UIItemFilter> filters = new();
         return filters;
+    }
+    CancellationToken refreshToken;
+    InvItemFilter lastInvItemFilter;
+    internal void CallRefresh()
+    {
+        refreshToken.ThrowIfCancellationRequested();
+        refreshToken = new();
+        Inv.StartRefreshTask(lastInvItemFilter, refreshToken);
     }
 }

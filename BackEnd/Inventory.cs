@@ -1,10 +1,13 @@
-﻿using ReLogic.Threading;
+﻿using LargerInventory.UI.ExtraUI;
+using LargerInventory.UI.Inventory;
+using ReLogic.Threading;
 using SML.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
@@ -382,27 +385,27 @@ namespace LargerInventory.BackEnd
             return true;
         }
 
-        public static Dictionary<int, List<InfoForUI>> GetInfoForUIs(params Predicate<Item>[] predicates)
+        internal static void StartRefreshTask(InvItemFilter lastInvItemFilter, CancellationToken refreshToken)
         {
-            predicates ??= [DefaultPredicate_GetInfoForUIs];
-            Dictionary<int, List<InfoForUI>> result = [];
+            Task refreshTask = new(RefreshTask, lastInvItemFilter, refreshToken);
+            refreshTask.Start();
+        }
+        static void RefreshTask(object state)
+        {
+            InvItemFilter filter = state is InvItemFilter f ? f : InvItemFilter.Prefab.Default;
+            List<InfoForUI> list = [];
             foreach (var type in _items.Keys)
             {
-                var list = result[type] = [];
-                for (int i = 0; i < _items[type].Count; i++)
+                for (int index = 0; index < _items[type].Count; index++)
                 {
-                    var item = _items[type][i];
-                    if (predicates.All(p => p?.Invoke(item) ?? true))
+                    var item = _items[type][index];
+                    if (filter.Check(item))
                     {
-                        list.Add(new InfoForUI(type, i, item));
+                        list.Add(new(type, index, item));
                     }
                 }
-            };
-            return result;
-        }
-        private static bool DefaultPredicate_GetInfoForUIs(Item item)
-        {
-            return true;
+            }
+            InvUI.Ins.Refresh(list);
         }
         public class InfoForUI
         {

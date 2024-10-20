@@ -38,7 +38,7 @@ namespace LargerInventory.BackEnd
                     Inventory.PushItem(item, out bool refresh);
                     if (refresh)
                     {
-                        InvUI.Ins.Refresh();
+                        InvUI.Ins.CallRefresh();
                     }
                     return false;
                 }
