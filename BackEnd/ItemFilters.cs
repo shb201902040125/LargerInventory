@@ -1,17 +1,12 @@
-﻿using ReLogic.Utilities;
-using System;
-using System.Collections;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using Terraria;
+using Terraria.GameContent.UI;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Terraria.UI;
 
-namespace LargerInventory.UI.ExtraUI
+namespace LargerInventory.BackEnd
 {
     public class InvItemFilter
     {
@@ -68,7 +63,7 @@ namespace LargerInventory.UI.ExtraUI
                                     count++;
                                     if (count >= target)
                                     {
-                                        break;
+
                                     }
                                 }
                             }
@@ -91,7 +86,7 @@ namespace LargerInventory.UI.ExtraUI
                                     count++;
                                     if (count >= target)
                                     {
-                                        break;
+
                                     }
                                 }
                             }
@@ -112,11 +107,11 @@ namespace LargerInventory.UI.ExtraUI
         {
             _filter = null;
         }
-        public static class Prefab
+        public static class FilterPrefab
         {
             public static readonly InvItemFilter Default = new(i => true);
 
-            public static readonly InvItemFilter IsWeapon = new(i => i.damage > 0);
+            public static readonly InvItemFilter IsWeapon = new(i => i.damage > 0 && i.useStyle > ItemUseStyleID.None && i.axe == 0 && i.hammer == 0 && i.pick == 0);
             static InvItemFilter _isDamageClass_0, _isDamageClass_1, _isDamageClass_2;
             /// <summary>
             /// Get a <see cref="InvItemFilter"/> for given DamageClass
@@ -140,78 +135,70 @@ namespace LargerInventory.UI.ExtraUI
             static InvItemFilter _isTool;
             public static InvItemFilter IsTool => _isTool ??= Combine(CombineType.AnyTrue, null, IsAxe, IsHammer, IsPick);
 
-            public static readonly InvItemFilter IsHead = new(i => i.headSlot > 0);
-            public static readonly InvItemFilter IsBody = new(i => i.bodySlot > 0);
-            public static readonly InvItemFilter IsLeg = new(i => i.legSlot > 0);
             static InvItemFilter _isArmor;
-            public static InvItemFilter IsArmor => _isArmor ??= Combine(CombineType.AnyTrue, null, IsHead, IsBody, IsLeg);
+            public static InvItemFilter IsArmor => _isArmor ??= Combine(CombineType.AnyTrue, null,
+                IsEquip(EquipType.Head), IsEquip(EquipType.Body), IsEquip(EquipType.Legs));
 
-            static Dictionary<EquipType, InvItemFilter> _isEquip = [];
-            public static InvItemFilter IsEquip(EquipType type)
+            private readonly static Dictionary<EquipType, InvItemFilter> _isEquip = [];
+            private static InvItemFilter CheckEquip(EquipType equip) => equip switch
             {
-                if (_isEquip.TryGetValue(type, out InvItemFilter filter))
+                EquipType.Head => new(i => i.headSlot > 0),
+                EquipType.Body => new(i => i.bodySlot > 0),
+                EquipType.Legs => new(i => i.legSlot > 0),
+                EquipType.HandsOn => new(i => i.handOnSlot > 0),
+                EquipType.HandsOff => new(i => i.handOffSlot > 0),
+                EquipType.Back => new(i => i.backSlot > 0),
+                EquipType.Front => new(i => i.frontSlot > 0),
+                EquipType.Shoes => new(i => i.shoeSlot > 0),
+                EquipType.Waist => new(i => i.waistSlot > 0),
+                EquipType.Wings => new(i => i.wingSlot > 0),
+                EquipType.Shield => new(i => i.shieldSlot > 0),
+                EquipType.Neck => new(i => i.neckSlot > 0),
+                EquipType.Face => new(i => i.faceSlot > 0),
+                EquipType.Balloon => new(i => i.balloonSlot > 0),
+                EquipType.Beard => new(i => i.beardSlot > 0),
+                _ => null,
+            };
+            public readonly static InvItemFilter CanEquip = Combine(CombineType.AnyTrue, null, LoadEquipFilter());
+            private static InvItemFilter[] LoadEquipFilter()
+            {
+                foreach (var equip in Enum.GetValues<EquipType>())
                 {
-                    return filter;
+                    _isEquip[equip] = CheckEquip(equip);
                 }
-                return _isEquip[type] = new(i =>
-                {
-                    var att = i.ModItem?.GetType().GetAttribute<AutoloadEquip>() ?? null;
-                    if ((att?.equipTypes ?? null) == null)
-                    {
-                        return false;
-                    }
-                    foreach (var attType in att.equipTypes)
-                    {
-                        if (type == attType)
-                        {
-                            return true;
-                        }
-                    }
-                    return false;
-                });
+                return [.. _isEquip.Values];
             }
+            public static InvItemFilter IsEquip(EquipType type) => _isEquip[type];
 
             public static readonly InvItemFilter IsLightPet = new(i => Main.lightPet[i.buffType]);
             public static readonly InvItemFilter IsVanityPet = new(i => Main.vanityPet[i.buffType]);
             public static readonly InvItemFilter IsProjPet = new(i => Main.projPet[i.buffType]);
             public static readonly InvItemFilter IsHook = new(i => Main.projHook[i.shoot]);
             public static readonly InvItemFilter IsMount = new(i => i.mountType != -1);
-            public static readonly InvItemFilter IsMinecraft = Combine(CombineType.AllTrue, null, IsMount, new(i => Mount.mounts[i.mountType].Minecart));
+            public static readonly InvItemFilter IsMinecrat = Combine(CombineType.AllTrue, null, IsMount, new(i => Mount.mounts[i.mountType].Minecart));
             public static readonly InvItemFilter IsDye = new(i => i.dye > 0);
 
             public static readonly InvItemFilter IsAccessory = new(i => i.accessory);
 
             public static readonly InvItemFilter IsPlaceableTile = new(i => i.createTile != -1);
             public static readonly InvItemFilter IsPlaceableWall = new(i => i.createWall != -1);
+            public static readonly InvItemFilter IsFurniture = Combine(CombineType.AllTrue, null, IsPlaceableTile, new(i => Main.tileFrameImportant[i.createTile]));
+            public static readonly InvItemFilter IsPlaceable = Combine(CombineType.AnyTrue, null, IsPlaceableTile, IsPlaceableWall);
 
             public static readonly InvItemFilter IsConsumeable = new(i => i.consumable);
+            public static readonly InvItemFilter IsHealthOrMana = new(i => i.healLife > 0 || i.healMana > 0);
             public static readonly InvItemFilter IsMedicament = new(i => i.buffType > 0 && i.useStyle == ItemUseStyleID.DrinkLiquid);
-            public static readonly InvItemFilter IsAmmo = new(i => i.ammo != AmmoID.None);
+            public static readonly InvItemFilter IsFood = new(i => i.buffType > 0 && i.useStyle == ItemUseStyleID.EatFood);
+            public static readonly InvItemFilter IsAmmo = new(i => i.ammo > AmmoID.None);
 
-            public static readonly InvItemFilter IsFurniture = Combine(CombineType.AllTrue, null, IsPlaceableTile, new(i => Main.tileFrameImportant[i.createTile]));
+
 
             public static readonly InvItemFilter IsMaterial = new(i => i.material);
+            public static readonly InvItemFilter IsCoin = new(i => CustomCurrencyManager.IsCustomCurrency(i));
 
             static InvItemFilter _exclusionAll;
-            public static InvItemFilter ExclusionAll
-            {
-                get
-                {
-                    if(_exclusionAll == null)
-                    {
-                        _exclusionAll = Combine(CombineType.AllFalse, null,
-                            IsWeapon,
-                            IsTool,
-                            IsArmor,
-                            IsAccessory,
-                            IsPlaceableTile,
-                            IsPlaceableWall,
-                            IsConsumeable,
-                            IsMaterial);
-                    }
-                    return _exclusionAll;
-                }
-            }
+            public static InvItemFilter ExclusionAll => _exclusionAll ??= Combine(CombineType.AllFalse, null,
+                IsWeapon, IsTool, CanEquip, IsAccessory, IsPlaceableTile, IsPlaceableWall, IsConsumeable, IsMaterial, IsCoin);
         }
         public enum CombineType
         {

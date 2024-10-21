@@ -1,4 +1,6 @@
-﻿using LargerInventory.UI.ExtraUI;
+﻿using LargerInventory.BackEnd;
+using LargerInventory.UI.ExtraUI;
+using LargerInventory.UI.ExtraUI.FIlters;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -43,34 +45,36 @@ public partial class InvUI : UIState
             oldPos = Main.MouseScreen;
         };
         Append(bg);
-        /*const string vp = "Terraria/Images/";
-        for (int i = 0; i < 4; i++)
+
+
+        UIPanel buttonBg = new();
+        buttonBg.SetSize(60, 30);
+        buttonBg.SetPos(0, 0);
+        bg.Append(buttonBg);
+
+        UIText confirm = new("筛选");
+        confirm.Top.Pixels -= 5;
+        buttonBg.Append(confirm);
+        buttonBg.OnMouseOver += (evt, ls) =>
         {
-            UICornerPanel bottom = new() { Sensitive = true };
-            bottom.SetSize(52, 52);
-            bottom.SetPos(x, y);
-            bottom.HoverToColor();
-            x += 10 + bottom.Width;
-            bg.Add(bottom);
+            confirm.TextColor = Color.Gold;
+        };
+        buttonBg.OnMouseOut += (evt, ls) =>
+        {
+            confirm.TextColor = Color.White;
+        };
+        buttonBg.OnLeftMouseDown += (evt, ls) =>
+        {
+            dragging = false;
+            LISystem.filterUI.OnInitialize();
+            LISystem.filterUIF.IsVisible = true;
+            LISystem.invUIF.IsVisible = false;
+        };
 
-            string tex = i switch
-            {
-                0 => "ChestStack_1",
-                1 => "UI/Sort_1",
-                _ => string.Empty
-            };
-            string tip = i switch
-            {
-                0=>
-            }
-            if (tex == string.Empty)
-                continue;
-            UIImage allIN = new(T2D(vp + tex)) { DrawTextureStyle = DrawTextureStyle.FromCenter };
-            allIN.SetCenter(0, 0);
-            bottom.Add(allIN);}*/
-
-        UIImage line = new(TextureAssets.MagicPixel.Value);
-        line.ScaleToFit = true;
+        UIImage line = new(TextureAssets.MagicPixel.Value)
+        {
+            ScaleToFit = true
+        };
         line.SetSize(0, 2, 1);
         line.SetPos(0, 60);
         bg.Append(line);
@@ -147,7 +151,7 @@ public partial class InvUI : UIState
     {
         ref float scale = ref Main.inventoryScale;
         float old = scale;
-        scale = 1;
+        scale = 0.75f;
         base.DrawChildren(spriteBatch);
         scale = old;
 

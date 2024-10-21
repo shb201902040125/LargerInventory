@@ -10,21 +10,29 @@ namespace LargerInventory.BackEnd
     public class LISystem : ModSystem
     {
         internal static InvUI invUI;
-        internal static UserInterface uif;
+        internal static InvFilter filterUI;
+        internal static UserInterface invUIF, filterUIF;
         private GameTime gt;
         public override void Load()
         {
             invUI = new();
             invUI.Activate();
-            uif = new();
-            uif.SetState(invUI);
+            filterUI = new();
+            filterUI.Activate();
+            invUIF = new();
+            invUIF.SetState(invUI);
+            filterUIF = new();
+            filterUIF.SetState(filterUI);
         }
         public override void UpdateUI(GameTime gameTime)
         {
-            //invUI.Update(gameTime);
-            if (uif.IsVisible)
+            if (invUIF.IsVisible)
             {
-                uif.Update(gameTime);
+                invUIF.Update(gameTime);
+            }
+            if (filterUIF.IsVisible)
+            {
+                filterUIF.Update(gameTime);
             }
             gt = gameTime;
         }
@@ -37,9 +45,13 @@ namespace LargerInventory.BackEnd
                    Mod.Name,
                    delegate
                    {
-                       if (uif.IsVisible)
+                       if (invUIF.IsVisible)
                        {
-                           uif.Draw(Main.spriteBatch, gt);
+                           invUIF.Draw(Main.spriteBatch, gt);
+                       }
+                       if (filterUIF.IsVisible)
+                       {
+                           filterUIF.Draw(Main.spriteBatch, gt);
                        }
                        return true;
                    },

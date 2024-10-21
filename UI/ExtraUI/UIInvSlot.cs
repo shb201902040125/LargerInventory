@@ -106,6 +106,13 @@ namespace LargerInventory.UI.ExtraUI
                     int mult = (time - 20) / 5;
                     int space = (int)Math.Sqrt(20 - Math.Min(mult, 19));
                     Item source = Info.Item;
+                    if (source.stack <= 0)
+                    {
+                        Item temp = new();
+                        Info.Changed(ref temp);
+                        time = 0;
+                        return;
+                    }
                     int count = Math.Clamp(mult - 20, 1, source.stack);
                     if (time % space == 0)
                     {
@@ -134,13 +141,13 @@ namespace LargerInventory.UI.ExtraUI
                 OverrideCurosr();
             }
             Rectangle rect = GetDimensions().ToRectangle();
-            sb.Draw(item.favorited? TextureAssets.InventoryBack10.Value: TextureAssets.InventoryBack.Value, rect, Color.White);
+            sb.Draw(item.favorited ? TextureAssets.InventoryBack10.Value : TextureAssets.InventoryBack.Value, rect, Color.White);
             if (item.stack > 0)
             {
-                ItemSlot.DrawItemIcon(item, 0, sb, rect.Center.ToVector2(), Main.inventoryScale, 52 * Main.inventoryScale * 0.6f, Color.White);
+                ItemSlot.DrawItemIcon(item, 0, sb, rect.Center.ToVector2(), Main.inventoryScale, 52 * Main.inventoryScale, Color.White);
                 if (item.stack == 1)
                     return;
-                var font =FontAssets.ItemStack.Value;
+                var font = FontAssets.ItemStack.Value;
                 string stack = item.stack.ToString();
                 Vector2 size = font.MeasureString(stack);
                 Vector2 offset = new Vector2(8, -24) * 0.8f;

@@ -392,7 +392,7 @@ namespace LargerInventory.BackEnd
         }
         static void RefreshTask(object state)
         {
-            InvItemFilter filter = state is InvItemFilter f ? f : InvItemFilter.Prefab.Default;
+            InvItemFilter filter = state is InvItemFilter f ? f : InvItemFilter.FilterPrefab.Default;
             List<InfoForUI> list = [];
             foreach (var type in _items.Keys)
             {

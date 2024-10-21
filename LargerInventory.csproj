@@ -9,9 +9,6 @@
       <HintPath>..\SML\bin\Debug\net8.0\SML.dll</HintPath>
     </Reference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="UI\ExtraUI\Filters\" />
-  </ItemGroup>
   
 
 	<!-- References -->

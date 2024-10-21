@@ -1,10 +1,8 @@
 ﻿using LargerInventory.UI.Inventory;
 using Microsoft.Xna.Framework.Input;
 using Terraria;
-using Terraria.GameContent.UI.Elements;
 using Terraria.GameInput;
 using Terraria.ID;
-using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace LargerInventory.BackEnd
@@ -30,7 +28,7 @@ namespace LargerInventory.BackEnd
                     }
                 }
                 InvUI.Ins.CallRefresh();
-                LISystem.uif.IsVisible =! LISystem.uif.IsVisible;
+                LISystem.invUIF.IsVisible = !LISystem.invUIF.IsVisible;
                 /*InvUI inv = InvUI.Ins;
                 inv.RemoveAllChildren();
                 inv.OnInitialize();
