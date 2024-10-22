@@ -74,7 +74,7 @@ namespace LargerInventory.BackEnd
                     {
                         if (extra is not int target)
                         {
-                            throw new ArgumentException("When CombineType is CountTrue, extra should be of type int", nameof(extra));
+                            throw new ArgumentException("When CombineType is CountFalse, extra should be of type int", nameof(extra));
                         }
                         return new(item =>
                         {

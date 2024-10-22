@@ -384,13 +384,16 @@ namespace LargerInventory.BackEnd
             container.RemoveAt(index);
             return true;
         }
-
-        internal static void StartRefreshTask(InvItemFilter lastInvItemFilter, CancellationToken refreshToken)
+        internal static void StartRefreshTask(InvItemFilter lastInvItemFilter, CancellationToken refreshToken, Action<Task<List<InfoForUI>>> callback = null)
         {
-            Task refreshTask = new(RefreshTask, lastInvItemFilter, refreshToken);
+            Task<List<InfoForUI>> refreshTask = new(RefreshTask, lastInvItemFilter, refreshToken);
+            if (callback is not null)
+            {
+                refreshTask.ContinueWith(callback);
+            }
             refreshTask.Start();
         }
-        static void RefreshTask(object state)
+        static List<InfoForUI> RefreshTask(object state)
         {
             InvItemFilter filter = state is InvItemFilter f ? f : InvItemFilter.FilterPrefab.Default;
             List<InfoForUI> list = [];
@@ -405,7 +408,7 @@ namespace LargerInventory.BackEnd
                     }
                 }
             }
-            InvUI.Ins.Refresh(list);
+            return list;
         }
         public class InfoForUI
         {

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
@@ -156,33 +157,38 @@ public partial class InvUI : UIState
         scale = old;
 
     }
-    internal void Refresh(List<Inv.InfoForUI> items)
+    internal void Refresh(Task<List<Inv.InfoForUI>> task)
     {
-        view.Clear();
-        int slotCount = 0;
-        List<UIInvSlot> temp = [];
-        foreach (var info in items)
+        if (task.IsCompletedSuccessfully)
         {
-            UIInvSlot slot = new(info);
-            temp.Add(slot);
-            slotCount++;
-        }
-        temp = [.. temp.OrderBy(slot => slot.Info.Item.favorited)
-            .ThenBy(slot => slot.Info.Item.type)
-            .ThenByDescending(slot => slot.Info.Item.stack)];
-        var slotCountPerRow = (view.Width.Pixels - 10) / 62;
-        int needCount = (int)(Math.Ceiling(slotCount / slotCountPerRow) * slotCountPerRow);
-        if (needCount > slotCount)
-        {
-            while (slotCount < needCount)
+            var items = task.Result;
+            view.Clear();
+            int slotCount = 0;
+            List<UIInvSlot> temp = [];
+            foreach (var info in items)
             {
-                UIInvSlot Empty = new(new(-1, -1, new()));
-                temp.Add(Empty);
+                UIInvSlot slot = new(info);
+                temp.Add(slot);
                 slotCount++;
             }
+            temp = [.. temp.OrderBy(slot => slot.Info.Item.favorited)
+            .ThenBy(slot => slot.Info.Item.type)
+            .ThenByDescending(slot => slot.Info.Item.stack)];
+            var slotCountPerRow = (view.Width.Pixels - 10) / 62;
+            int needCount = (int)(Math.Ceiling(slotCount / slotCountPerRow) * slotCountPerRow);
+            if (needCount > slotCount)
+            {
+                while (slotCount < needCount)
+                {
+                    UIInvSlot Empty = new(new(-1, -1, new()));
+                    temp.Add(Empty);
+                    slotCount++;
+                }
+            }
+            temp.ForEach(view.Add);
+            view.Recalculate();
         }
-        temp.ForEach(view.Add);
-        view.Recalculate();
+        //TODO 补充刷新任务失败的显示
     }
     private List<UIItemFilter> CreateFilter()
     {
@@ -195,6 +201,7 @@ public partial class InvUI : UIState
     {
         refreshToken.ThrowIfCancellationRequested();
         refreshToken = new();
-        Inv.StartRefreshTask(lastInvItemFilter, refreshToken);
+        Inv.StartRefreshTask(lastInvItemFilter, refreshToken,Refresh);
+        //TODO 需要显示等待结果界面
     }
 }

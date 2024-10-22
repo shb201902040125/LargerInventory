@@ -7,6 +7,7 @@ using ReLogic.Content;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
@@ -26,6 +27,7 @@ namespace LargerInventory.UI.Inventory
         internal static bool load;
         private UIPanel bg;
         private List<UIItemFilter> filters;
+        CancellationToken refreshToken;
         public override void OnInitialize()
         {
             #region 基本设定
@@ -350,10 +352,11 @@ namespace LargerInventory.UI.Inventory
         }
         private void ApplyFilters(UIMouseEvent evt, UIElement listeningElement)
         {
-            //TODO: 填充origin
-            List<Item> origin = [];
-            List<Item> result = origin.Where(i => filters.All(f => !f.filterActive || f.MatchItem(i))).ToList();
-            // RefreshInv
+            currentFilter = InvItemFilter.Combine(InvItemFilter.CombineType.AllTrue, null, [..from UIItemFilter uiFilter in filters where uiFilter.filterActive select uiFilter.Filter]);
+            refreshToken.ThrowIfCancellationRequested();
+            refreshToken = new();
+            BackEnd.Inventory.StartRefreshTask(currentFilter, refreshToken, InvUI.Ins.Refresh);
+
             LISystem.filterUIF.IsVisible = false;
             LISystem.invUIF.IsVisible = true;
         }
