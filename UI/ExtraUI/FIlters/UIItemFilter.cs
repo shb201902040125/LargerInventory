@@ -19,11 +19,11 @@ namespace LargerInventory.UI.ExtraUI.FIlters
         public Texture2D OverrideTex;
         public Rectangle? sourceRect;
         public bool filterActive;
-        public bool Reversal;
+        public bool Reverse;
         private static Texture2D Gold;
         private static List<Item> vnl, mods;
         protected virtual bool Match(Item item) => ParentFilter?.Check(item) != false && Filter.Check(item);
-        public bool MatchItem(Item item) => Reversal ^ Match(item);
+        public bool MatchItem(Item item) => Reverse ^ Match(item);
         public UIItemFilter(InvItemFilter filter, InvItemFilter parent = null)
         {
             Gold ??= LargerInventory.Ins.Assets.Request<Texture2D>("UI/Assets/Inventory_Gold", AssetRequestMode.ImmediateLoad).Value;
@@ -34,7 +34,7 @@ namespace LargerInventory.UI.ExtraUI.FIlters
             OnLeftMouseDown += (evt, ls) =>
             {
                 if (filterActive)
-                    filterActive = Reversal = false;
+                    filterActive = Reverse = false;
                 else
                     filterActive = true;
             };
@@ -42,7 +42,7 @@ namespace LargerInventory.UI.ExtraUI.FIlters
             {
                 if (!filterActive)
                     filterActive = true;
-                Reversal = !Reversal;
+                Reverse = !Reverse;
             };
         }
         protected override void DrawSelf(SpriteBatch sb)
@@ -50,11 +50,11 @@ namespace LargerInventory.UI.ExtraUI.FIlters
             var local = GetDimensions();
             var rect = local.ToRectangle();
             sb.Draw(TextureAssets.InventoryBack16.Value, rect,
-                (filterActive ? Reversal ? Color.Coral : Color.LightGreen : Color.White) * 0.75f);
+                (filterActive ? Reverse ? Color.Coral : Color.LightGreen : Color.White) * 0.75f);
             if (IsMouseHovering)
             {
                 sb.Draw(Gold, rect, Color.White);
-                if (IconItemID > 0)
+                if (OverrideTex == null && IconItemID > 0)
                 {
                     Main.hoverItemName += ContentSamples.ItemsByType[IconItemID].Name + "\n";
                 }
@@ -87,9 +87,11 @@ namespace LargerInventory.UI.ExtraUI.FIlters
                     (item.type < ItemID.Count ? vnl : mods).Add(item);
                 }
             }
-            int vanilla = vnl.FirstOrDefault(i => !InvFilter.usedIcon.Contains(i.type) && Match(i))?.type ?? 0;
+            int vanilla = vnl.FirstOrDefault(i => i.type > 0 && !InvFilter.usedIcon.Contains(i.type) && Match(i))?.type ?? 0;
+            Item h = vnl.Find(x => x.hammer > 0);
             if (vanilla > 0)
             {
+                InvFilter.usedIcon.Add(vanilla);
                 return vanilla;
             }
             return mods.FirstOrDefault(i => !InvFilter.usedIcon.Contains(i.type) && Match(i))?.type ?? 0;

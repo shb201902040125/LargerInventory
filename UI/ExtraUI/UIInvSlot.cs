@@ -37,7 +37,12 @@ namespace LargerInventory.UI.ExtraUI
         private void UIInvSlot_OnLeftMouseDown(UIMouseEvent evt, UIElement listeningElement)
         {
             Item item = Info.Item;
-            if (Main.mouseItem.type != item.type || item.stack <= 0)
+            if (Main.mouseItem.IsAir && item.IsAir)
+            {
+                return;
+            }
+            Main.playerInventory = true;
+            if (Main.mouseItem.type != item.type)
             {
                 (Main.mouseItem, item) = (item, Main.mouseItem);
                 CheckItem(ref item);
@@ -63,8 +68,9 @@ namespace LargerInventory.UI.ExtraUI
             Item source = Info.Item;
             if (mouse.type == ItemID.None)
             {
-                if (source.type == 0 || source.stack <= 0)
+                if (source.IsAir)
                     return;
+                Main.playerInventory = true;
                 Main.mouseItem = source.Clone();
                 Main.mouseItem.stack = 1;
                 source.stack--;
@@ -80,6 +86,7 @@ namespace LargerInventory.UI.ExtraUI
             {
                 if (source.stack <= 0 || !ItemLoader.CanStack(mouse, source))
                     return;
+                Main.playerInventory = true;
                 mouse.stack++;
                 source.stack--;
                 if (source.stack == 0)
@@ -134,16 +141,16 @@ namespace LargerInventory.UI.ExtraUI
         protected override void DrawSelf(SpriteBatch sb)
         {
             var item = Info.Item;
-            if (IsMouseHovering)
-            {
-                Main.hoverItemName = item.Name;
-                Main.HoverItem = item;
-                OverrideCurosr();
-            }
             Rectangle rect = GetDimensions().ToRectangle();
-            sb.Draw(item.favorited ? TextureAssets.InventoryBack10.Value : TextureAssets.InventoryBack.Value, rect, Color.White);
+            sb.Draw(!item.IsAir && item.favorited ? TextureAssets.InventoryBack10.Value : TextureAssets.InventoryBack.Value, rect, Color.White);
             if (item.stack > 0)
             {
+                if (IsMouseHovering)
+                {
+                    Main.hoverItemName = item.Name;
+                    Main.HoverItem = item;
+                    OverrideCurosr();
+                }
                 ItemSlot.DrawItemIcon(item, 0, sb, rect.Center.ToVector2(), Main.inventoryScale, 52 * Main.inventoryScale, Color.White);
                 if (item.stack == 1)
                     return;

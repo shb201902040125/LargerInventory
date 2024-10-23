@@ -21,7 +21,7 @@ namespace LargerInventory.UI.Inventory
 {
     public class InvFilter : UIState
     {
-        public InvItemFilter currentFilter;
+        public Func<Item, bool> currentFilter;
         public bool IsVisable;
         internal static HashSet<int> usedIcon;
         internal static bool load;
@@ -36,18 +36,20 @@ namespace LargerInventory.UI.Inventory
             if (load)
                 return;
             load = true;
+            //RemoveAllChildren();
             bg = new()
             {
                 VAlign = 0.5f,
                 HAlign = 0.5f
             };
-            bg.SetSize(600, 400);
+            bg.SetSize(650, 400);
             bg.SetMargin(10, 10, 10, 10);
             Append(bg);
 
             UIPanel viewBg = new();
-            viewBg.SetSize(-30, -40, 1, 1);
+            viewBg.SetSize(-70, 0, 1, 1);
             bg.Append(viewBg);
+
             UIView view = [];
             view.ManualSortMethod = new(_ =>
             {
@@ -60,58 +62,47 @@ namespace LargerInventory.UI.Inventory
                 UIElement uie = list.Last();
                 return uie.Top.Pixels + uie.Height.Pixels;
             });
-            view.SetSize(0, 0, 1, 1);
+            view.SetSize(-40, 0, 1, 1);
             viewBg.Append(view);
 
             UIScrollbar scroll = new();
-            scroll.Top.Pixels += 6;
-            scroll.Height.Set(-52, 1);
+            scroll.Height.Set(0, 1);
             scroll.Left.Set(-20, 1);
             view.SetScrollbar(scroll);
-            bg.Append(scroll);
+            viewBg.Append(scroll);
             #endregion
 
             #region 确认按钮
-            UIPanel buttonBg = new()
-            {
-                HAlign = 0.3f,
-            };
-            buttonBg.SetSize(60, 30);
-            buttonBg.Top.Set(-30, 1);
-            bg.Append(buttonBg);
+            float x = -60, y = 0;
 
-            UIText confirm = new("确认");
-            confirm.Top.Pixels -= 5;
-            buttonBg.Append(confirm);
-            buttonBg.OnMouseOver += (evt, ls) =>
-            {
-                confirm.TextColor = Color.Gold;
-            };
-            buttonBg.OnMouseOut += (evt, ls) =>
-            {
-                confirm.TextColor = Color.White;
-            };
-            buttonBg.OnLeftMouseDown += ApplyFilters;
+            UITextButton confirm = new("确认");
+            confirm.SetPos(x, y, 1);
+            confirm.OnLeftMouseDown += ConfirmFilter;
+            bg.Append(confirm);
+            y += 40;
 
-            buttonBg = new()
+            UITextButton reverse = new("反转");
+            reverse.SetPos(x, y, 1);
+            reverse.OnLeftMouseDown += (_, _) => filters.ForEach(f =>
             {
-                HAlign = 0.7f,
-            };
-            buttonBg.SetSize(60, 30);
-            buttonBg.Top.Set(-30, 1);
-            bg.Append(buttonBg);
+                if (f.filterActive)
+                {
+                    f.Reverse = !f.Reverse;
+                }
+            });
+            bg.Append(reverse);
+            y += 40;
 
-            UIText cancel = new("取消");
-            cancel.Top.Pixels -= 5;
-            buttonBg.Append(cancel);
-            buttonBg.OnMouseOver += (evt, ls) =>
-            {
-                cancel.TextColor = Color.Gold;
-            };
-            buttonBg.OnMouseOut += (evt, ls) =>
-            {
-                cancel.TextColor = Color.White;
-            };
+            UITextButton clear = new("清除");
+            clear.SetPos(x, y, 1);
+            clear.OnLeftMouseDown += (_, _) => filters.ForEach(f => f.Reverse = f.filterActive = false);
+            bg.Append(clear);
+            y += 40;
+
+            UITextButton cancel = new("取消");
+            cancel.SetPos(x, y, 1);
+            cancel.OnLeftMouseDown += (_, _) => ChangeVisible(false);
+            bg.Append(cancel);
 
             #endregion
 
@@ -119,7 +110,7 @@ namespace LargerInventory.UI.Inventory
             usedIcon = [];
             filters = [];
             Texture2D head = ModContent.Request<Texture2D>("Terraria/Images/UI/Creative/Infinite_Icons", AssetRequestMode.ImmediateLoad).Value;
-            float x = 0, y = 0;
+            x = y = 0;
 
             bool TryAppend(UIItemFilter filter)
             {
@@ -151,6 +142,7 @@ namespace LargerInventory.UI.Inventory
                 };
                 leader.SetPos(x, y);
                 view.Add(leader);
+                filters.Add(leader);
                 x += leader.Width.Pixels + 5;
 
                 UIText text = new(info);
@@ -282,11 +274,9 @@ namespace LargerInventory.UI.Inventory
             AppendLine();
             TryAppend(new(IsLightPet));
             TryAppend(new(IsVanityPet));
-            TryAppend(new(IsProjPet));
             TryAppend(new(IsHook));
             TryAppend(new(IsMount));
             TryAppend(new(IsMinecrat));
-            TryAppend(new(IsDye));
             #endregion
 
             #region 消耗
@@ -327,6 +317,7 @@ namespace LargerInventory.UI.Inventory
 
             AppendLine();
 
+            TryAppend(new(IsDye));
             TryAppend(new(IsMaterial)
             {
                 IconItemID = ItemID.Gel
@@ -341,26 +332,27 @@ namespace LargerInventory.UI.Inventory
             });
             #endregion
         }
+
+
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
-            if (IsMouseHovering)
+            if (bg.IsMouseHovering)
             {
                 PlayerInput.LockVanillaMouseScroll(GetType().FullName);
                 Main.LocalPlayer.mouseInterface = true;
             }
         }
-        private void ApplyFilters(UIMouseEvent evt, UIElement listeningElement)
+        public static void ChangeVisible(bool openFilter)
         {
-            currentFilter = InvItemFilter.Combine(InvItemFilter.CombineType.AllTrue, null, [..from UIItemFilter uiFilter in filters where uiFilter.filterActive select uiFilter.Filter]);
-            refreshToken.ThrowIfCancellationRequested();
-            refreshToken = new();
-            BackEnd.Inventory.StartRefreshTask(currentFilter, refreshToken, InvUI.Ins.Refresh);
-
-            LISystem.filterUIF.IsVisible = false;
-            LISystem.invUIF.IsVisible = true;
+            LISystem.filterUIF.IsVisible = openFilter;
+            LISystem.invUIF.IsVisible = !openFilter;
         }
-
+        private void ConfirmFilter(UIMouseEvent evt, UIElement listeningElement)
+        {
+            ApplyFilters();
+            ChangeVisible(false);
+        }
 
         private void ChangeDamageClassMatchType(int type)
         {
@@ -371,6 +363,20 @@ namespace LargerInventory.UI.Inventory
                     dcF.FilterType = type;
                 }
             }
+        }
+
+        private void ApplyFilters()
+        {
+            currentFilter =  new(i => filters?.All(f => !f.filterActive || f.MatchItem(i)) != false);
+            refreshToken.ThrowIfCancellationRequested();
+            refreshToken = new();
+            BackEnd.Inventory.StartRefreshTask(currentFilter, refreshToken, InvUI.Ins.Refresh);
+        }
+
+        public void ClearFilters()
+        {
+            filters?.ForEach(f => f.filterActive = f.Reverse = false);
+            ApplyFilters();
         }
     }
 }

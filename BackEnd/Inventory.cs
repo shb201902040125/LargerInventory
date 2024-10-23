@@ -1,10 +1,6 @@
-﻿using LargerInventory.UI.ExtraUI;
-using LargerInventory.UI.Inventory;
-using ReLogic.Threading;
-using SML.Common;
+﻿using SML.Common;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -384,7 +380,7 @@ namespace LargerInventory.BackEnd
             container.RemoveAt(index);
             return true;
         }
-        internal static void StartRefreshTask(InvItemFilter lastInvItemFilter, CancellationToken refreshToken, Action<Task<List<InfoForUI>>> callback = null)
+        internal static void StartRefreshTask(Func<Item, bool> lastInvItemFilter, CancellationToken refreshToken, Action<Task<List<InfoForUI>>> callback = null)
         {
             Task<List<InfoForUI>> refreshTask = new(RefreshTask, lastInvItemFilter, refreshToken);
             if (callback is not null)
@@ -395,14 +391,14 @@ namespace LargerInventory.BackEnd
         }
         static List<InfoForUI> RefreshTask(object state)
         {
-            InvItemFilter filter = state is InvItemFilter f ? f : InvItemFilter.FilterPrefab.Default;
+            Func<Item, bool> filter = state is Func<Item, bool> f ? f : InvItemFilter.FilterPrefab.Default;
             List<InfoForUI> list = [];
             foreach (var type in _items.Keys)
             {
                 for (int index = 0; index < _items[type].Count; index++)
                 {
                     var item = _items[type][index];
-                    if (filter.Check(item))
+                    if (filter(item))
                     {
                         list.Add(new(type, index, item));
                     }
@@ -451,7 +447,7 @@ namespace LargerInventory.BackEnd
                         Type = newItem.type;
                         Index = PushItemToFirstEmptySlot(newItem);
                         Item = _items[Type][Index];
-                        if(clearNewItem)
+                        if (clearNewItem)
                         {
                             newItem = new();
                         }

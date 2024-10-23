@@ -12,7 +12,7 @@ namespace LargerInventory.UI.ExtraUI;
 public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
 {
     public delegate bool ElementSearchMethod(UIElement element);
-
+    private bool hide;
     private class UIInnerList : UIElement
     {
         public override bool ContainsPoint(Vector2 point) => true;
@@ -93,7 +93,14 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
         _innerList.RemoveAllChildren();
         _items.Clear();
     }
-
+    public override void OnActivate()
+    {
+        hide = false;
+    }
+    public override void OnDeactivate()
+    {
+        hide = true;
+    }
     public override void Recalculate()
     {
         base.Recalculate();
@@ -109,6 +116,8 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
 
     public override void RecalculateChildren()
     {
+        if (hide)
+            return;
         base.RecalculateChildren();
         if (ManualRePosMethod != null)
         {
@@ -175,6 +184,18 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
         if (_scrollbar != null)
             _innerList.Top.Set(0f - _scrollbar.GetValue(), 0f);
         Recalculate();
+    }
+    public override void Draw(SpriteBatch spriteBatch)
+    {
+        if (hide)
+        {
+            return;
+        }
+        base.Draw(spriteBatch);
+    }
+    protected override void DrawChildren(SpriteBatch spriteBatch)
+    {
+        base.DrawChildren(spriteBatch);
     }
 
     public IEnumerator<UIElement> GetEnumerator() => ((IEnumerable<UIElement>)_items).GetEnumerator();

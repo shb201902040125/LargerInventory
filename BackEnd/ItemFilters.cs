@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
-using Terraria.GameContent.UI;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -109,9 +108,9 @@ namespace LargerInventory.BackEnd
         }
         public static class FilterPrefab
         {
-            public static readonly InvItemFilter Default = new(i => true);
+            public static readonly Func<Item, bool> Default = new(i => true);
 
-            public static readonly InvItemFilter IsWeapon = new(i => i.damage > 0 && i.useStyle > ItemUseStyleID.None && i.axe == 0 && i.hammer == 0 && i.pick == 0);
+            public static readonly InvItemFilter IsWeapon = new(i => i.damage > 0 && i.useStyle != ItemUseStyleID.None);
             static InvItemFilter _isDamageClass_0, _isDamageClass_1, _isDamageClass_2;
             /// <summary>
             /// Get a <see cref="InvItemFilter"/> for given DamageClass
@@ -172,6 +171,10 @@ namespace LargerInventory.BackEnd
 
             public static readonly InvItemFilter IsLightPet = new(i => Main.lightPet[i.buffType]);
             public static readonly InvItemFilter IsVanityPet = new(i => Main.vanityPet[i.buffType]);
+
+            /// <summary>
+            /// 这个好像不对
+            /// </summary>
             public static readonly InvItemFilter IsProjPet = new(i => Main.projPet[i.buffType]);
             public static readonly InvItemFilter IsHook = new(i => Main.projHook[i.shoot]);
             public static readonly InvItemFilter IsMount = new(i => i.mountType != -1);
@@ -194,7 +197,7 @@ namespace LargerInventory.BackEnd
 
 
             public static readonly InvItemFilter IsMaterial = new(i => i.material);
-            public static readonly InvItemFilter IsCoin = new(i => CustomCurrencyManager.IsCustomCurrency(i));
+            public static readonly InvItemFilter IsCoin = new(i => i.IsCurrency || i.IsACoin);
 
             static InvItemFilter _exclusionAll;
             public static InvItemFilter ExclusionAll => _exclusionAll ??= Combine(CombineType.AllFalse, null,

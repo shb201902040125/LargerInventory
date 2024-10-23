@@ -25,6 +25,8 @@ public partial class InvUI : UIState
     private Vector2 oldPos;
     private UIView view;
     private UIPanel bg;
+    private UIWaitRefresh waitText;
+    private bool waiting;
     internal bool needRefresh;
 
     public override void OnInitialize()
@@ -42,35 +44,28 @@ public partial class InvUI : UIState
         };
         bg.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
         {
-            dragging = true;
-            oldPos = Main.MouseScreen;
+            if (bg.GetElementAt(Main.MouseScreen) == bg)
+            {
+                dragging = true;
+                oldPos = Main.MouseScreen;
+            }
         };
         Append(bg);
 
 
-        UIPanel buttonBg = new();
-        buttonBg.SetSize(60, 30);
-        buttonBg.SetPos(0, 0);
-        bg.Append(buttonBg);
-
-        UIText confirm = new("筛选");
-        confirm.Top.Pixels -= 5;
-        buttonBg.Append(confirm);
-        buttonBg.OnMouseOver += (evt, ls) =>
+        UITextButton filter = new("筛选");
+        filter.SetPos(0, 0);
+        filter.OnLeftMouseDown += (evt, ls) =>
         {
-            confirm.TextColor = Color.Gold;
-        };
-        buttonBg.OnMouseOut += (evt, ls) =>
-        {
-            confirm.TextColor = Color.White;
-        };
-        buttonBg.OnLeftMouseDown += (evt, ls) =>
-        {
-            dragging = false;
             LISystem.filterUI.OnInitialize();
-            LISystem.filterUIF.IsVisible = true;
-            LISystem.invUIF.IsVisible = false;
+            InvFilter.ChangeVisible(true);
         };
+        bg.Append(filter);
+
+        UITextButton clear = new("清除筛选");
+        clear.SetPos(70, 0);
+        clear.OnLeftMouseDown += (_, _) => LISystem.filterUI.ClearFilters();
+        bg.Append(clear);
 
         UIImage line = new(TextureAssets.MagicPixel.Value)
         {
@@ -85,6 +80,13 @@ public partial class InvUI : UIState
         viewBg.SetPos(0, 70);
         bg.Append(viewBg);
 
+        waitText = new("等待刷新")
+        {
+            HAlign = VAlign = 0.5f,
+            hide = true
+        };
+        viewBg.Append(waitText);
+
         view = new()
         {
             ListPaddingX = 10,
@@ -93,6 +95,10 @@ public partial class InvUI : UIState
         view.SetSize(-40, 0, 1, 1);
         view.ManualRePosMethod = (list, px, py) =>
         {
+            if (waiting)
+            {
+                return 0;
+            }
             float h = 0;
             float x = px, y = py;
             int w = view.GetDimensions().ToRectangle().Width;
@@ -120,8 +126,11 @@ public partial class InvUI : UIState
     }
     public override void Update(GameTime gt)
     {
-        base.Update(gt);
-        if (IsMouseHovering)
+        if (!waiting)
+        {
+            base.Update(gt);
+        }
+        if (bg.IsMouseHovering)
         {
             PlayerInput.LockVanillaMouseScroll(GetType().FullName);
             Main.LocalPlayer.mouseInterface = true;
@@ -159,10 +168,14 @@ public partial class InvUI : UIState
     }
     internal void Refresh(Task<List<Inv.InfoForUI>> task)
     {
+        waitText.hide = false;
         if (task.IsCompletedSuccessfully)
         {
+            waiting = true;
             var items = task.Result;
+            waitText.SetText("等待刷新");
             view.Clear();
+            view.Deactivate();
             int slotCount = 0;
             List<UIInvSlot> temp = [];
             foreach (var info in items)
@@ -186,8 +199,13 @@ public partial class InvUI : UIState
                 }
             }
             temp.ForEach(view.Add);
-            view.Recalculate();
+            view.Activate();
+            waiting = false;
+            waitText.hide = true;
+            return;
+            //view.Recalculate();
         }
+        waitText.SetText("刷新失败");
         //TODO 补充刷新任务失败的显示
     }
     private List<UIItemFilter> CreateFilter()
@@ -196,12 +214,11 @@ public partial class InvUI : UIState
         return filters;
     }
     CancellationToken refreshToken;
-    InvItemFilter lastInvItemFilter;
     internal void CallRefresh()
     {
         refreshToken.ThrowIfCancellationRequested();
         refreshToken = new();
-        Inv.StartRefreshTask(lastInvItemFilter, refreshToken,Refresh);
+        Inv.StartRefreshTask(LISystem.filterUI.currentFilter, refreshToken, Refresh);
         //TODO 需要显示等待结果界面
     }
 }

@@ -20,15 +20,16 @@ namespace LargerInventory.BackEnd
             {
                 if (Inventory.Count == 0)
                 {
-                    for (int i = 0; i < 30; i++)
+                    for (int i = 1; i < ItemID.Count; i++)
                     {
-                        Item item = new Item(Main.rand.Next(ItemID.Count));
+                        Item item = new(i);
                         item.stack = Main.rand.Next(1, item.maxStack);
                         Inventory.PushItem(item, out _);
                     }
                 }
                 InvUI.Ins.CallRefresh();
-                LISystem.invUIF.IsVisible = !LISystem.invUIF.IsVisible;
+                if (!LISystem.filterUIF.IsVisible)
+                    LISystem.invUIF.IsVisible = !LISystem.invUIF.IsVisible;
                 /*InvUI inv = InvUI.Ins;
                 inv.RemoveAllChildren();
                 inv.OnInitialize();
