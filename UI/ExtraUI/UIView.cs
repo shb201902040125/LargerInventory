@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
@@ -155,6 +156,10 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
 
     public void UpdateOrder()
     {
+        if (_items.Count == 0)
+        {
+            return;
+        }
         if (ManualSortMethod != null)
             ManualSortMethod(_items);
         else

@@ -108,7 +108,7 @@ namespace LargerInventory.BackEnd
         }
         public static class FilterPrefab
         {
-            public static readonly Func<Item, bool> Default = new(i => true);
+            public static readonly InvItemFilter Default = new(i => true);
 
             public static readonly InvItemFilter IsWeapon = new(i => i.damage > 0 && i.useStyle != ItemUseStyleID.None);
             static InvItemFilter _isDamageClass_0, _isDamageClass_1, _isDamageClass_2;

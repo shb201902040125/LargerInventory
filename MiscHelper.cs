@@ -1,4 +1,5 @@
 ﻿using Terraria;
+using Terraria.ID;
 
 namespace LargerInventory
 {
@@ -6,13 +7,9 @@ namespace LargerInventory
     {
         public static void ApplyLifeAndOrMana(this Player player, Item item)
         {
-            /*
-            int num = item.healLife;
-            int healMana = item.healMana;
-            */
             int num = player.GetHealLife(item, true);
             int healMana = player.GetHealMana(item, true);
-            if (item.type == 3001)
+            if (item.type == ItemID.StrangeBrew)
             {
                 int healLife = item.healLife;
                 int num2 = 120;

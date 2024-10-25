@@ -13,6 +13,7 @@ using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
 using Terraria.GameInput;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
 using static LargerInventory.BackEnd.InvItemFilter.FilterPrefab;
@@ -74,14 +75,13 @@ namespace LargerInventory.UI.Inventory
 
             #region 确认按钮
             float x = -60, y = 0;
-
-            UITextButton confirm = new("确认");
+            UITextButton confirm = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Common.Verify"));//确认
             confirm.SetPos(x, y, 1);
             confirm.OnLeftMouseDown += ConfirmFilter;
             bg.Append(confirm);
             y += 40;
 
-            UITextButton reverse = new("反转");
+            UITextButton reverse = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Common.Reversal"));//反转
             reverse.SetPos(x, y, 1);
             reverse.OnLeftMouseDown += (_, _) => filters.ForEach(f =>
             {
@@ -93,13 +93,13 @@ namespace LargerInventory.UI.Inventory
             bg.Append(reverse);
             y += 40;
 
-            UITextButton clear = new("清除");
+            UITextButton clear = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Common.Clear"));//清除
             clear.SetPos(x, y, 1);
             clear.OnLeftMouseDown += (_, _) => filters.ForEach(f => f.Reverse = f.filterActive = false);
             bg.Append(clear);
             y += 40;
 
-            UITextButton cancel = new("取消");
+            UITextButton cancel = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilterCommon.Cancel"));//取消
             cancel.SetPos(x, y, 1);
             cancel.OnLeftMouseDown += (_, _) => ChangeVisible(false);
             bg.Append(cancel);
@@ -169,9 +169,9 @@ namespace LargerInventory.UI.Inventory
             #endregion
 
             #region 武器
-            AppendLeader(IsWeapon, "武器", 0, false, false);
+            AppendLeader(IsWeapon, Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsWeapon"), 0, false, false);
 
-            UICheckBoxText exact = new("完全匹配")
+            UICheckBoxText exact = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsWeapon.PerfectMatch"))
             {
                 checkActive = true
             };
@@ -180,12 +180,12 @@ namespace LargerInventory.UI.Inventory
             x += exact.Width.Pixels + 10;
 
 
-            UICheckBoxText countAs = new("计为同类");
+            UICheckBoxText countAs = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsWeapon.CountAs"));
             countAs.SetPos(x, y);
             view.Add(countAs);
             x += countAs.Width.Pixels + 10;
 
-            UICheckBoxText effAllow = new("允许效果");
+            UICheckBoxText effAllow = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsWeapon.GetEffect"));
             effAllow.SetPos(x, y);
             view.Add(effAllow);
 
@@ -235,7 +235,7 @@ namespace LargerInventory.UI.Inventory
             #endregion
 
             #region 工具
-            AppendLeader(IsTool, "工具", 6);
+            AppendLeader(IsTool, Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsTool"), 6);
             AppendLine();
 
             TryAppend(new(IsAxe));
@@ -244,9 +244,9 @@ namespace LargerInventory.UI.Inventory
             #endregion
 
             #region 装备
-            AppendLeader(CanEquip, "装备", 2, false);
+            AppendLeader(CanEquip, Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsEquip"), 2, false);
 
-            UICheckBoxText vanity = new("时装");
+            UICheckBoxText vanity = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsEquip.IsVanity"));
             vanity.OnLeftClick += (evt, le) =>
             {
                 foreach (var filter in filters)
@@ -270,7 +270,7 @@ namespace LargerInventory.UI.Inventory
             #endregion
 
             #region 饰品
-            AppendLeader(IsAccessory, "其他饰品", 9);
+            AppendLeader(IsAccessory, Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsEquip.IsOtherAccessory"), 9);
             AppendLine();
             TryAppend(new(IsLightPet));
             TryAppend(new(IsVanityPet));
@@ -280,7 +280,7 @@ namespace LargerInventory.UI.Inventory
             #endregion
 
             #region 消耗
-            AppendLeader(IsConsumeable, "消耗", 3);
+            AppendLeader(IsConsumeable, Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsConsumeable"), 3);
             AppendLine();
             TryAppend(new(IsHealthOrMana)
             {
@@ -301,7 +301,7 @@ namespace LargerInventory.UI.Inventory
             #endregion
 
             #region 放置
-            AppendLeader(IsPlaceable, "放置", 4);
+            AppendLeader(IsPlaceable, Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsPlaceable"), 4);
             AppendLine();
             TryAppend(new(IsPlaceableTile));
             TryAppend(new(IsPlaceableWall));
@@ -311,7 +311,7 @@ namespace LargerInventory.UI.Inventory
             #region 其他
             x = 0;
             y += 70;
-            UIText another = new("其他");
+            UIText another = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.Other"));
             another.SetPos(x, y + 10);
             view.Add(another);
 

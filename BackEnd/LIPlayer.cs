@@ -29,11 +29,13 @@ namespace LargerInventory.BackEnd
                 }
                 InvUI.Ins.CallRefresh();
                 if (!LISystem.filterUIF.IsVisible)
+                {
                     LISystem.invUIF.IsVisible = !LISystem.invUIF.IsVisible;
-                /*InvUI inv = InvUI.Ins;
-                inv.RemoveAllChildren();
-                inv.OnInitialize();
-                inv.Recalculate();*/
+                    if(!LISystem.invUIF.IsVisible)
+                    {
+                        Inventory.ClearAllEmptyItems();
+                    }
+                }
             }
         }
         public override void PostUpdate()

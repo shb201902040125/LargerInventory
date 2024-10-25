@@ -380,6 +380,20 @@ namespace LargerInventory.BackEnd
             container.RemoveAt(index);
             return true;
         }
+        public static void ClearAllEmptyItems(bool byCompress = true)
+        {
+            if (byCompress)
+            {
+                CompressAllItems();
+            }
+            else
+            {
+                Parallel.ForEach(_items.Keys, type =>
+                {
+                    _items[type].RemoveAll(i => i.IsAir);
+                });
+            }
+        }
         internal static void StartRefreshTask(Func<Item, bool> lastInvItemFilter, CancellationToken refreshToken, Action<Task<List<InfoForUI>>> callback = null)
         {
             Task<List<InfoForUI>> refreshTask = new(RefreshTask, lastInvItemFilter, refreshToken);
@@ -391,14 +405,14 @@ namespace LargerInventory.BackEnd
         }
         static List<InfoForUI> RefreshTask(object state)
         {
-            Func<Item, bool> filter = state is Func<Item, bool> f ? f : InvItemFilter.FilterPrefab.Default;
+            InvItemFilter filter = state is InvItemFilter f ? f : InvItemFilter.FilterPrefab.Default;
             List<InfoForUI> list = [];
             foreach (var type in _items.Keys)
             {
                 for (int index = 0; index < _items[type].Count; index++)
                 {
                     var item = _items[type][index];
-                    if (filter(item))
+                    if (!item.IsAir && filter.Check(item))
                     {
                         list.Add(new(type, index, item));
                     }

@@ -12,6 +12,7 @@ using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
 using Terraria.GameInput;
+using Terraria.Localization;
 using Terraria.UI;
 using Inv = LargerInventory.BackEnd.Inventory;
 
@@ -53,7 +54,7 @@ public partial class InvUI : UIState
         Append(bg);
 
 
-        UITextButton filter = new("筛选");
+        UITextButton filter = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.Inventory.Common.DoFilter"));
         filter.SetPos(0, 0);
         filter.OnLeftMouseDown += (evt, ls) =>
         {
@@ -62,7 +63,7 @@ public partial class InvUI : UIState
         };
         bg.Append(filter);
 
-        UITextButton clear = new("清除筛选");
+        UITextButton clear = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.Inventory.Common.ClearFilters"));
         clear.SetPos(70, 0);
         clear.OnLeftMouseDown += (_, _) => LISystem.filterUI.ClearFilters();
         bg.Append(clear);
@@ -80,7 +81,7 @@ public partial class InvUI : UIState
         viewBg.SetPos(0, 70);
         bg.Append(viewBg);
 
-        waitText = new("等待刷新")
+        waitText = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.Inventory.Common.WaitRefresh"))
         {
             HAlign = VAlign = 0.5f,
             hide = true
@@ -173,7 +174,7 @@ public partial class InvUI : UIState
         {
             waiting = true;
             var items = task.Result;
-            waitText.SetText("等待刷新");
+            waitText.SetText(Language.GetTextValue($"{nameof(LargerInventory)}.UI.Inventory.Common.WaitRefresh"));
             view.Clear();
             view.Deactivate();
             int slotCount = 0;
@@ -205,7 +206,7 @@ public partial class InvUI : UIState
             return;
             //view.Recalculate();
         }
-        waitText.SetText("刷新失败");
+        waitText.SetText(Language.GetTextValue($"{nameof(LargerInventory)}.UI.Inventory.Common.RefreshFailed"));
         //TODO 补充刷新任务失败的显示
     }
     private List<UIItemFilter> CreateFilter()
