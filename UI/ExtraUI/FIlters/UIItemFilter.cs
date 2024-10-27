@@ -20,14 +20,17 @@ namespace LargerInventory.UI.ExtraUI.FIlters
         public Rectangle? sourceRect;
         public bool filterActive;
         public bool Reverse;
+        public bool leader;
+        public string Label { get; init; }
         private static Texture2D Gold;
         private static List<Item> vnl, mods;
         protected virtual bool Match(Item item) => ParentFilter?.Check(item) != false && Filter.Check(item);
         public bool MatchItem(Item item) => Reverse ^ Match(item);
-        public UIItemFilter(InvItemFilter filter, InvItemFilter parent = null)
+        public UIItemFilter(InvItemFilter filter, InvItemFilter parent = null, string label = "")
         {
             Gold ??= LargerInventory.Ins.Assets.Request<Texture2D>("UI/Assets/Inventory_Gold", AssetRequestMode.ImmediateLoad).Value;
             this.SetSize(52, 52);
+            Label = label;
             Filter = filter;
             ParentFilter = parent;
             IconItemID = FindItemIcon();
@@ -54,9 +57,9 @@ namespace LargerInventory.UI.ExtraUI.FIlters
             if (IsMouseHovering)
             {
                 sb.Draw(Gold, rect, Color.White);
-                if (OverrideTex == null && IconItemID > 0)
+                if (Label != string.Empty)
                 {
-                    Main.hoverItemName += ContentSamples.ItemsByType[IconItemID].Name + "\n";
+                    Main.hoverItemName += Label + "\n";
                 }
             }
             var center = local.Center();
@@ -79,7 +82,6 @@ namespace LargerInventory.UI.ExtraUI.FIlters
             if (vnl == null)
             {
                 var items = ContentSamples.ItemsByType.Values.ToList();
-                items.Sort((x, y) => y.damage.CompareTo(x.damage));
                 vnl = [];
                 mods = [];
                 foreach (var item in items)

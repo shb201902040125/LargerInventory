@@ -13,10 +13,10 @@ using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
 using Terraria.GameInput;
 using Terraria.ID;
-using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.UI;
 using static LargerInventory.BackEnd.InvItemFilter.FilterPrefab;
+using static LargerInventory.MiscHelper;
 
 namespace LargerInventory.UI.Inventory
 {
@@ -28,6 +28,7 @@ namespace LargerInventory.UI.Inventory
         internal static bool load;
         private UIPanel bg;
         private List<UIItemFilter> filters;
+        private const string UIKey = "UI.ItemFilter.";
         CancellationToken refreshToken;
         public override void OnInitialize()
         {
@@ -36,8 +37,7 @@ namespace LargerInventory.UI.Inventory
                 return;
             if (load)
                 return;
-            load = true;
-            //RemoveAllChildren();
+                load = true;
             bg = new()
             {
                 VAlign = 0.5f,
@@ -48,7 +48,6 @@ namespace LargerInventory.UI.Inventory
             Append(bg);
 
             UIPanel viewBg = new();
-            viewBg.SetSize(-70, 0, 1, 1);
             bg.Append(viewBg);
 
             UIView view = [];
@@ -74,15 +73,13 @@ namespace LargerInventory.UI.Inventory
             #endregion
 
             #region 确认按钮
-            float x = -60, y = 0;
-            UITextButton confirm = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Common.Verify"));//确认
-            confirm.SetPos(x, y, 1);
+            List<UITextButton> buttons = [];
+            UITextButton confirm = new(FilterGTV("Common.Verify"));//确认
             confirm.OnLeftMouseDown += ConfirmFilter;
             bg.Append(confirm);
-            y += 40;
+            buttons.Add(confirm);
 
-            UITextButton reverse = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Common.Reversal"));//反转
-            reverse.SetPos(x, y, 1);
+            UITextButton reverse = new(FilterGTV("Common.Reversal"));//反转
             reverse.OnLeftMouseDown += (_, _) => filters.ForEach(f =>
             {
                 if (f.filterActive)
@@ -91,32 +88,40 @@ namespace LargerInventory.UI.Inventory
                 }
             });
             bg.Append(reverse);
-            y += 40;
+            buttons.Add(reverse);
 
-            UITextButton clear = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Common.Clear"));//清除
-            clear.SetPos(x, y, 1);
+            UITextButton clear = new(FilterGTV("Common.Clear"));//清除
             clear.OnLeftMouseDown += (_, _) => filters.ForEach(f => f.Reverse = f.filterActive = false);
             bg.Append(clear);
-            y += 40;
+            buttons.Add(clear);
 
-            UITextButton cancel = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilterCommon.Cancel"));//取消
-            cancel.SetPos(x, y, 1);
+            UITextButton cancel = new(FilterGTV("Common.Cancel"));//取消
             cancel.OnLeftMouseDown += (_, _) => ChangeVisible(false);
             bg.Append(cancel);
+            buttons.Add(cancel);
 
+            float w = buttons.Max(x => x.Width.Pixels), y = 0;
+            viewBg.SetSize(-w - 10, 0, 1, 1);
+            viewBg.Recalculate();
+            foreach (var button in buttons)
+            {
+                button.SetPos(-w, y, 1);
+                y += 40;
+            }
             #endregion
 
             #region 要用的东西
+            float x = 0;
+            y = 0;
             usedIcon = [];
             filters = [];
             Texture2D head = ModContent.Request<Texture2D>("Terraria/Images/UI/Creative/Infinite_Icons", AssetRequestMode.ImmediateLoad).Value;
-            x = y = 0;
 
             bool TryAppend(UIItemFilter filter)
             {
                 if (filter.IconItemID > 0)
                 {
-                    if (view.GetDimensions().Width - 20 < x + 39)
+                    if (view.GetInnerDimensions().Width < x + 52)
                     {
                         x = 0;
                         y += filter.Height.Pixels + 5;
@@ -169,9 +174,9 @@ namespace LargerInventory.UI.Inventory
             #endregion
 
             #region 武器
-            AppendLeader(IsWeapon, Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsWeapon"), 0, false, false);
+            AppendLeader(IsWeapon, FilterGTV("Filters.IsWeapon.Label"), 0, false, false);
 
-            UICheckBoxText exact = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsWeapon.PerfectMatch"))
+            UICheckBoxText exact = new(FilterGTV("Filters.IsWeapon.Perfect"))
             {
                 checkActive = true
             };
@@ -180,12 +185,12 @@ namespace LargerInventory.UI.Inventory
             x += exact.Width.Pixels + 10;
 
 
-            UICheckBoxText countAs = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsWeapon.CountAs"));
+            UICheckBoxText countAs = new(FilterGTV("Filters.IsWeapon.CountAs"));
             countAs.SetPos(x, y);
             view.Add(countAs);
             x += countAs.Width.Pixels + 10;
 
-            UICheckBoxText effAllow = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsWeapon.GetEffect"));
+            UICheckBoxText effAllow = new(FilterGTV("Filters.IsWeapon.GetEffect"));
             effAllow.SetPos(x, y);
             view.Add(effAllow);
 
@@ -225,28 +230,31 @@ namespace LargerInventory.UI.Inventory
             int count = DamageClassLoader.DamageClassCount;
             for (int i = 0; i < count; i++)
             {
-                var filter = new UIDamageClassFilter(DamageClassLoader.GetDamageClass(i));
+                var dc = DamageClassLoader.GetDamageClass(i);
+                var filter = new UIDamageClassFilter(dc)
+                {
+                    Label = dc.DisplayName.Value.ToString().Replace(" ", "") + "\n" + dc.PrettyPrintName()
+                };
                 if (filter.DamageClass != DamageClass.Default)
                 {
                     TryAppend(filter);
                 }
-
             }
             #endregion
 
             #region 工具
-            AppendLeader(IsTool, Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsTool"), 6);
+            AppendLeader(IsTool, FilterGTV("Filters.IsTool.Label"), 6);
             AppendLine();
 
-            TryAppend(new(IsAxe));
-            TryAppend(new(IsHammer));
-            TryAppend(new(IsPick));
+            TryAppend(new(IsAxe) { Label = FilterGTV("Filters.IsTool.IsAxe") });
+            TryAppend(new(IsHammer) { Label = FilterGTV("Filters.IsTool.IsHammer") });
+            TryAppend(new(IsPick) { Label = FilterGTV("Filters.IsTool.IsPick") });
             #endregion
 
             #region 装备
-            AppendLeader(CanEquip, Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsEquip"), 2, false);
+            AppendLeader(CanEquip, FilterGTV("Filters.IsEquip.Label"), 2, false);
 
-            UICheckBoxText vanity = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsEquip.IsVanity"));
+            UICheckBoxText vanity = new(FilterGTV("Filters.IsEquip.IsVanity"));
             vanity.OnLeftClick += (evt, le) =>
             {
                 foreach (var filter in filters)
@@ -265,69 +273,76 @@ namespace LargerInventory.UI.Inventory
             count = equips.Length;
             for (int i = 0; i < count; i++)
             {
-                TryAppend(new UIEquipFilter(IsEquip(equips[i])));
+                TryAppend(new UIEquipFilter(IsEquip(equips[i])) { Label = FilterGTV($"Filters.IsEquip.Is{equips[i]}") });
             }
             #endregion
 
-            #region 饰品
-            AppendLeader(IsAccessory, Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsEquip.IsOtherAccessory"), 9);
+            #region 其他饰品
+            AppendLeader(IsAccessory, FilterGTV("Filters.IsMiscAccessory.Label"), 9);
             AppendLine();
-            TryAppend(new(IsLightPet));
-            TryAppend(new(IsVanityPet));
-            TryAppend(new(IsHook));
-            TryAppend(new(IsMount));
-            TryAppend(new(IsMinecrat));
+            TryAppend(new(IsLightPet) { Label = FilterGTV("Filters.IsMiscAccessory.IsLightPet") });
+            TryAppend(new(IsVanityPet) { Label = FilterGTV("Filters.IsMiscAccessory.IsVanityPet") });
+            TryAppend(new(IsHook) { Label = FilterGTV("Filters.IsMiscAccessory.IsHook") });
+            TryAppend(new(IsMount) { Label = FilterGTV("Filters.IsMiscAccessory.IsMount") });
+            TryAppend(new(IsMinecart) { Label = FilterGTV("Filters.IsMiscAccessory.IsMinecart") });
             #endregion
 
             #region 消耗
-            AppendLeader(IsConsumeable, Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsConsumeable"), 3);
+            AppendLeader(IsConsumeable, FilterGTV("Filters.IsConsumeable.Label"), 3);
             AppendLine();
             TryAppend(new(IsHealthOrMana)
             {
+                Label = FilterGTV("Filters.IsConsumeable.IsHealthOrMana"),
                 IconItemID = 3001
             });
-            TryAppend(new(IsMedicament)
+            TryAppend(new(IsBuffPotion)
             {
+                Label = FilterGTV("Filters.IsConsumeable.IsBuffPotion"),
                 IconItemID = ItemID.FlaskofIchor
             });
             TryAppend(new(IsFood)
             {
+                Label = FilterGTV("Filters.IsConsumeable.IsFood"),
                 IconItemID = ItemID.SeafoodDinner
             });
             TryAppend(new(IsAmmo)
             {
+                Label = FilterGTV("Filters.IsConsumeable.IsAmmo"),
                 IconItemID = ItemID.AmmoBox
             });
             #endregion
 
             #region 放置
-            AppendLeader(IsPlaceable, Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.IsPlaceable"), 4);
+            AppendLeader(IsPlaceable, FilterGTV("Filters.IsPlaceable.Label"), 4);
             AppendLine();
-            TryAppend(new(IsPlaceableTile));
-            TryAppend(new(IsPlaceableWall));
-            TryAppend(new(IsFurniture));
+            TryAppend(new(IsPlaceableTile) { Label = FilterGTV("Filters.IsPlaceable.IsPlaceableTile") });
+            TryAppend(new(IsPlaceableWall) { Label = FilterGTV("Filters.IsPlaceable.IsPlaceableWall") });
+            TryAppend(new(IsFurniture) { Label = FilterGTV("Filters.IsPlaceable.IsFurniture") });
             #endregion
 
             #region 其他
             x = 0;
             y += 70;
-            UIText another = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.ItemFilter.Filters.Other"));
+            UIText another = new(FilterGTV("Filters.IsOther.Label"));
             another.SetPos(x, y + 10);
             view.Add(another);
 
             AppendLine();
 
-            TryAppend(new(IsDye));
             TryAppend(new(IsMaterial)
             {
+                Label = FilterGTV("Filters.IsOther.IsMaterial"),
                 IconItemID = ItemID.Gel
             });
-            TryAppend(new(IsCoin)
+            TryAppend(new(IsDye) { Label = FilterGTV("Filters.IsOther.IsDye") });
+            TryAppend(new(IsCurrency)
             {
+                Label = FilterGTV("Filters.IsOther.IsCurrency"),
                 IconItemID = ItemID.PlatinumCoin
             });
             TryAppend(new(ExclusionAll)
             {
+                Label = FilterGTV("Filters.IsOther.ExclusionAll"),
                 OverrideTex = ModContent.Request<Texture2D>("Terraria/Images/UI/SearchCancel", AssetRequestMode.ImmediateLoad).Value
             });
             #endregion
@@ -367,7 +382,7 @@ namespace LargerInventory.UI.Inventory
 
         private void ApplyFilters()
         {
-            currentFilter =  new(i => filters?.All(f => !f.filterActive || f.MatchItem(i)) != false);
+            currentFilter = new(i => filters?.All(f => !f.filterActive || f.MatchItem(i)) != false);
             refreshToken.ThrowIfCancellationRequested();
             refreshToken = new();
             BackEnd.Inventory.StartRefreshTask(currentFilter, refreshToken, InvUI.Ins.Refresh);
@@ -378,5 +393,7 @@ namespace LargerInventory.UI.Inventory
             filters?.ForEach(f => f.filterActive = f.Reverse = false);
             ApplyFilters();
         }
+
+        private static string FilterGTV(string key) => GTV(UIKey + key);
     }
 }

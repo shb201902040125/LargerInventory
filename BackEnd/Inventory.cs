@@ -405,14 +405,14 @@ namespace LargerInventory.BackEnd
         }
         static List<InfoForUI> RefreshTask(object state)
         {
-            InvItemFilter filter = state is InvItemFilter f ? f : InvItemFilter.FilterPrefab.Default;
+            Func<Item, bool> filter = state is Func<Item, bool> f ? f : InvItemFilter.FilterPrefab.Default.Check;
             List<InfoForUI> list = [];
             foreach (var type in _items.Keys)
             {
                 for (int index = 0; index < _items[type].Count; index++)
                 {
                     var item = _items[type][index];
-                    if (!item.IsAir && filter.Check(item))
+                    if (!item.IsAir && filter(item))
                     {
                         list.Add(new(type, index, item));
                     }

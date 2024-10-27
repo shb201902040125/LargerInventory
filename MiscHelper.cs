@@ -1,10 +1,12 @@
 ﻿using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 
 namespace LargerInventory
 {
     public static class MiscHelper
     {
+        public const string LocalKey = "Mods.LargerInventory.";
         public static void ApplyLifeAndOrMana(this Player player, Item item)
         {
             int num = player.GetHealLife(item, true);
@@ -64,5 +66,6 @@ namespace LargerInventory
                 }
             }
         }
+        public static string GTV(string key, params object[] args) => Language.GetTextValue(LocalKey + key, args);
     }
 }

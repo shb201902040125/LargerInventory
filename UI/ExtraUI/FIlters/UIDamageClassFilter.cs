@@ -25,10 +25,6 @@ namespace LargerInventory.UI.ExtraUI.FIlters
         protected override void DrawSelf(SpriteBatch sb)
         {
             base.DrawSelf(sb);
-            if (IsMouseHovering)
-            {
-                Main.hoverItemName += DamageClass.DisplayName + "\n" + DamageClass.PrettyPrintName();
-            }
         }
     }
 }

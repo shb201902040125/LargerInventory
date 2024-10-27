@@ -18,6 +18,7 @@ namespace LargerInventory.BackEnd
         {
             if (SwitchInv.JustPressed)
             {
+                InvUI.Ins.OnInitialize();
                 if (Inventory.Count == 0)
                 {
                     for (int i = 1; i < ItemID.Count; i++)

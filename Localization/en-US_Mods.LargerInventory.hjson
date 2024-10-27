@@ -24,4 +24,92 @@ Configs: {
 	}
 }
 
+UI: {
+	Inventory: {
+		Common: {
+			OpenFilter: Filter
+			ClearFilters: Clear Filters
+			WaitRefresh: Wait Refresh
+			RefreshFailed: Refresh Failed
+		}
+	}
+
+	ItemFilter: {
+		Common: {
+			Verify: Verify
+			Reversal: Reversal
+			Clear: Clear
+			Cancel: Cancel
+		}
+
+		Filters: {
+			IsWeapon: {
+				Label: Weapon
+				Perfect: Perfect
+				CountAs: CountAs
+				GetEffect: Get Effect
+			}
+
+			IsTool: {
+				Label: Tool
+				IsAxe: Axe
+				IsHammer: Hammer
+				IsPick: Pick
+			}
+
+			IsEquip: {
+				Label: Equip
+				IsVanity: Vanity
+				IsHead: Head
+				IsBody: Body
+				IsLegs: Legs
+				IsHandsOn: Hands On
+				IsHandsOff: Hands Off
+				IsBack: Back
+				IsFront: Front
+				IsShoes: Shoes
+				IsWaist: Waist
+				IsWings: Wings
+				IsShield: Shield
+				IsNeck: Neck
+				IsFace: Face
+				IsBalloon: Balloon
+				IsBeard: Beard
+			}
+
+			IsMiscAccessory: {
+				Label: Misc Accessory
+				IsLightPet: Light Pet
+				IsVanityPet: Vanity Pet
+				IsHook: Hook
+				IsMount: Mount
+				IsMinecart: Minecart
+			}
+
+			IsConsumeable: {
+				Label: Consumeable
+				IsHealthOrMana: Health or Mana
+				IsBuffPotion: Buff Potion
+				IsFood: Food
+				IsAmmo: Ammo
+			}
+
+			IsPlaceable: {
+				Label: Placeable
+				IsPlaceableTile: Tile
+				IsPlaceableWall: Wall
+				IsFurniture: Furniture
+			}
+
+			IsOther: {
+				Label: Other
+				IsMaterial: Material
+				IsDye: Dye
+				IsCurrency: Currency
+				ExclusionAll: Exclusion All
+			}
+		}
+	}
+}
+
 Keybinds.SwitchInv.DisplayName: Switch Inv

@@ -12,8 +12,8 @@ using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
 using Terraria.GameInput;
-using Terraria.Localization;
 using Terraria.UI;
+using static LargerInventory.MiscHelper;
 using Inv = LargerInventory.BackEnd.Inventory;
 
 namespace LargerInventory.UI.Inventory;
@@ -28,10 +28,17 @@ public partial class InvUI : UIState
     private UIPanel bg;
     private UIWaitRefresh waitText;
     private bool waiting;
+    private const string UIKey = "UI.Inventory.";
+    private bool load;
     internal bool needRefresh;
 
     public override void OnInitialize()
     {
+        if (Main.gameMenu)
+            return;
+        if (load)
+            return;
+        load = true;
         bg = new()
         {
             Width = new(520, 0),
@@ -54,7 +61,7 @@ public partial class InvUI : UIState
         Append(bg);
 
 
-        UITextButton filter = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.Inventory.Common.DoFilter"));
+        UITextButton filter = new(InvGTV("Common.OpenFilter"));
         filter.SetPos(0, 0);
         filter.OnLeftMouseDown += (evt, ls) =>
         {
@@ -63,7 +70,7 @@ public partial class InvUI : UIState
         };
         bg.Append(filter);
 
-        UITextButton clear = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.Inventory.Common.ClearFilters"));
+        UITextButton clear = new(InvGTV("Common.ClearFilters"));
         clear.SetPos(70, 0);
         clear.OnLeftMouseDown += (_, _) => LISystem.filterUI.ClearFilters();
         bg.Append(clear);
@@ -81,7 +88,7 @@ public partial class InvUI : UIState
         viewBg.SetPos(0, 70);
         bg.Append(viewBg);
 
-        waitText = new(Language.GetTextValue($"{nameof(LargerInventory)}.UI.Inventory.Common.WaitRefresh"))
+        waitText = new(InvGTV("Common.WaitRefresh"))
         {
             HAlign = VAlign = 0.5f,
             hide = true
@@ -174,7 +181,7 @@ public partial class InvUI : UIState
         {
             waiting = true;
             var items = task.Result;
-            waitText.SetText(Language.GetTextValue($"{nameof(LargerInventory)}.UI.Inventory.Common.WaitRefresh"));
+            waitText.SetText(InvGTV("Common.WaitRefresh"));
             view.Clear();
             view.Deactivate();
             int slotCount = 0;
@@ -206,7 +213,7 @@ public partial class InvUI : UIState
             return;
             //view.Recalculate();
         }
-        waitText.SetText(Language.GetTextValue($"{nameof(LargerInventory)}.UI.Inventory.Common.RefreshFailed"));
+        waitText.SetText(InvGTV("Common.RefreshFailed"));
         //TODO 补充刷新任务失败的显示
     }
     private List<UIItemFilter> CreateFilter()
@@ -222,4 +229,5 @@ public partial class InvUI : UIState
         Inv.StartRefreshTask(LISystem.filterUI.currentFilter, refreshToken, Refresh);
         //TODO 需要显示等待结果界面
     }
+    private static string InvGTV(string key) => GTV(UIKey + key);
 }

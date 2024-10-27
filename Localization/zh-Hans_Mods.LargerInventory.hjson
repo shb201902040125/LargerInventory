@@ -1,0 +1,115 @@
+Configs: {
+	LIConfigs: {
+		DisplayName: 无限背包
+
+		ReplenishStockBeforeUse: {
+			Label: 使用前补充库存
+			Tooltip: ""
+		}
+
+		AutoUseLifePotion: {
+			Label: 从无限背包中自动使用生命药水
+			Tooltip: ""
+		}
+
+		AutoUseManaPotion: {
+			Label: 从无限背包中自动使用魔力药水
+			Tooltip: ""
+		}
+
+		PayFromInventory: {
+			Label: 从无限背包中支付
+			Tooltip: ""
+		}
+	}
+}
+
+UI: {
+	Inventory: {
+		Common: {
+			OpenFilter: 筛选
+			ClearFilters: 清除筛选
+			WaitRefresh: 等待刷新
+			RefreshFailed: 刷新失败
+		}
+	}
+
+	ItemFilter: {
+		Common: {
+			Verify: 确认
+			Reversal: 反转
+			Clear: 清除
+			Cancel: 取消
+		}
+
+		Filters: {
+			IsWeapon: {
+				Label: 武器
+				Perfect: 完全匹配
+				CountAs: 计为同类
+				GetEffect: 允许效果
+			}
+
+			IsTool: {
+				Label: 工具
+				IsAxe: 斧
+				IsHammer: 锤
+				IsPick: 镐
+			}
+
+			IsEquip: {
+				Label: 装备
+				IsVanity: 时装
+				IsHead: 头部
+				IsBody: 胸部
+				IsLegs: 腿部
+				IsHandsOn: 手饰
+				IsHandsOff: 副手
+				IsBack: 背面
+				IsFront: 正面
+				IsShoes: 鞋子
+				IsWaist: 腰部
+				IsWings: 翅膀
+				IsShield: 盾牌
+				IsNeck: 颈饰
+				IsFace: 面部
+				IsBalloon: 气球
+				IsBeard: 胡须
+			}
+
+			IsMiscAccessory: {
+				Label: 其他饰品
+				IsLightPet: 照明宠物
+				IsVanityPet: 时装宠物
+				IsHook: 钩爪
+				IsMount: 坐骑
+				IsMinecart: 矿车
+			}
+
+			IsConsumeable: {
+				Label: 消耗品
+				IsHealthOrMana: 血药蓝药
+				IsBuffPotion: 增益药剂
+				IsFood: 食物
+				IsAmmo: 弹药
+			}
+
+			IsPlaceable: {
+				Label: 放置
+				IsPlaceableTile: 物块
+				IsPlaceableWall: 墙壁
+				IsFurniture: 家具
+			}
+
+			IsOther: {
+				Label: 其他
+				IsMaterial: 材料
+				IsDye: 染料
+				IsCurrency: Currency
+				ExclusionAll: 排除全部
+			}
+		}
+	}
+}
+
+Keybinds.SwitchInv.DisplayName: 切换无限背包可见性

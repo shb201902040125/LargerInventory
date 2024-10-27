@@ -178,7 +178,7 @@ namespace LargerInventory.BackEnd
             public static readonly InvItemFilter IsProjPet = new(i => Main.projPet[i.buffType]);
             public static readonly InvItemFilter IsHook = new(i => Main.projHook[i.shoot]);
             public static readonly InvItemFilter IsMount = new(i => i.mountType != -1);
-            public static readonly InvItemFilter IsMinecrat = Combine(CombineType.AllTrue, null, IsMount, new(i => Mount.mounts[i.mountType].Minecart));
+            public static readonly InvItemFilter IsMinecart = Combine(CombineType.AllTrue, null, IsMount, new(i => Mount.mounts[i.mountType].Minecart));
             public static readonly InvItemFilter IsDye = new(i => i.dye > 0);
 
             public static readonly InvItemFilter IsAccessory = new(i => i.accessory);
@@ -190,18 +190,18 @@ namespace LargerInventory.BackEnd
 
             public static readonly InvItemFilter IsConsumeable = new(i => i.consumable);
             public static readonly InvItemFilter IsHealthOrMana = new(i => i.healLife > 0 || i.healMana > 0);
-            public static readonly InvItemFilter IsMedicament = new(i => i.buffType > 0 && i.useStyle == ItemUseStyleID.DrinkLiquid);
+            public static readonly InvItemFilter IsBuffPotion = new(i => i.buffType > 0 && i.useStyle == ItemUseStyleID.DrinkLiquid);
             public static readonly InvItemFilter IsFood = new(i => i.buffType > 0 && i.useStyle == ItemUseStyleID.EatFood);
             public static readonly InvItemFilter IsAmmo = new(i => i.ammo > AmmoID.None);
 
 
 
             public static readonly InvItemFilter IsMaterial = new(i => i.material);
-            public static readonly InvItemFilter IsCoin = new(i => i.IsCurrency || i.IsACoin);
+            public static readonly InvItemFilter IsCurrency = new(i => i.IsCurrency || i.IsACoin);
 
             static InvItemFilter _exclusionAll;
             public static InvItemFilter ExclusionAll => _exclusionAll ??= Combine(CombineType.AllFalse, null,
-                IsWeapon, IsTool, CanEquip, IsAccessory, IsPlaceableTile, IsPlaceableWall, IsConsumeable, IsMaterial, IsCoin);
+                IsWeapon, IsTool, CanEquip, IsAccessory, IsPlaceableTile, IsPlaceableWall, IsConsumeable, IsMaterial, IsCurrency);
         }
         public enum CombineType
         {
