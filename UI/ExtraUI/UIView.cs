@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
@@ -13,21 +12,23 @@ namespace LargerInventory.UI.ExtraUI;
 public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
 {
     public delegate bool ElementSearchMethod(UIElement element);
-    private bool hide;
     private class UIInnerList : UIElement
     {
         public override bool ContainsPoint(Vector2 point) => true;
 
         protected override void DrawChildren(SpriteBatch spriteBatch)
         {
-            Vector2 position = Parent.GetDimensions().Position();
-            Vector2 dimensions = new Vector2(Parent.GetDimensions().Width, Parent.GetDimensions().Height);
-            foreach (UIElement element in Elements)
+            lock (Elements)
             {
-                Vector2 position2 = element.GetDimensions().Position();
-                Vector2 dimensions2 = new Vector2(element.GetDimensions().Width, element.GetDimensions().Height);
-                if (Collision.CheckAABBvAABBCollision(position, dimensions, position2, dimensions2))
-                    element.Draw(spriteBatch);
+                Vector2 position = Parent.GetDimensions().Position();
+                Vector2 dimensions = new Vector2(Parent.GetDimensions().Width, Parent.GetDimensions().Height);
+                foreach (UIElement element in Elements)
+                {
+                    Vector2 position2 = element.GetDimensions().Position();
+                    Vector2 dimensions2 = new Vector2(element.GetDimensions().Width, element.GetDimensions().Height);
+                    if (Collision.CheckAABBvAABBCollision(position, dimensions, position2, dimensions2))
+                        element.Draw(spriteBatch);
+                }
             }
         }
 
@@ -41,7 +42,6 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
     internal UIElement _innerList = new UIInnerList();
     private float _innerListHeight;
     public float ListPaddingY = 5f, ListPaddingX = 5f;
-    public Action<List<UIElement>> ManualSortMethod;
 
     /// <summary>
     /// innerUIE, paddingX, paddingY, return innerHeight
@@ -77,15 +77,11 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
     {
         _items.Add(item);
         _innerList.Append(item);
-        UpdateOrder();
-        _innerList.Recalculate();
     }
 
     public virtual bool Remove(UIElement item)
     {
         _innerList.RemoveChild(item);
-        // If order is stable doesn't make sense to reorder, left because it's in vanilla
-        UpdateOrder();
         return _items.Remove(item);
     }
 
@@ -93,14 +89,6 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
     {
         _innerList.RemoveAllChildren();
         _items.Clear();
-    }
-    public override void OnActivate()
-    {
-        hide = false;
-    }
-    public override void OnDeactivate()
-    {
-        hide = true;
     }
     public override void Recalculate()
     {
@@ -117,26 +105,26 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
 
     public override void RecalculateChildren()
     {
-        if (hide)
-            return;
-        base.RecalculateChildren();
-        if (ManualRePosMethod != null)
+        lock (Elements)
         {
-            _innerListHeight = ManualRePosMethod.Invoke(_items, ListPaddingX, ListPaddingY);
-        }
-        else
-        {
-            float num = 0f;
-            for (int i = 0; i < _items.Count; i++)
+            if (ManualRePosMethod != null)
             {
-                float num2 = _items.Count == 1 ? 0f : ListPaddingY;
-                _items[i].Top.Set(num, 0f);
-                _items[i].Recalculate();
-                num += _items[i].GetOuterDimensions().Height + num2;
+                _innerListHeight = ManualRePosMethod.Invoke(_items, ListPaddingX, ListPaddingY);
             }
-            _innerListHeight = num;
+            else
+            {
+                float num = 0f;
+                for (int i = 0; i < _items.Count; i++)
+                {
+                    float num2 = _items.Count == 1 ? 0f : ListPaddingY;
+                    _items[i].Top.Set(num, 0f);
+                    _items[i].Recalculate();
+                    num += _items[i].GetOuterDimensions().Height + num2;
+                }
+                _innerListHeight = num;
+            }
+            base.RecalculateChildren();
         }
-
     }
 
     private void UpdateScrollbar()
@@ -154,22 +142,6 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
         UpdateScrollbar();
     }
 
-    public void UpdateOrder()
-    {
-        if (_items.Count == 0)
-        {
-            return;
-        }
-        if (ManualSortMethod != null)
-            ManualSortMethod(_items);
-        else
-            _items.Sort(SortMethod);
-
-        UpdateScrollbar();
-    }
-
-    public int SortMethod(UIElement item1, UIElement item2) => item1.CompareTo(item2);
-
     public override List<SnapPoint> GetSnapPoints()
     {
         List<SnapPoint> list = new List<SnapPoint>();
@@ -186,16 +158,15 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
 
     protected override void DrawSelf(SpriteBatch spriteBatch)
     {
+        Main.DebugDrawer.Begin();
+        DrawDebugHitbox(Main.DebugDrawer);
+        Main.DebugDrawer.End();
         if (_scrollbar != null)
             _innerList.Top.Set(0f - _scrollbar.GetValue(), 0f);
         Recalculate();
     }
     public override void Draw(SpriteBatch spriteBatch)
     {
-        if (hide)
-        {
-            return;
-        }
         base.Draw(spriteBatch);
     }
     protected override void DrawChildren(SpriteBatch spriteBatch)

@@ -31,6 +31,7 @@ UI: {
 			ClearFilters: 清除筛选
 			WaitRefresh: 等待刷新
 			RefreshFailed: 刷新失败
+			Search: 搜索
 		}
 	}
 

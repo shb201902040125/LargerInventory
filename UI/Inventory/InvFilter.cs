@@ -51,10 +51,6 @@ namespace LargerInventory.UI.Inventory
             bg.Append(viewBg);
 
             UIView view = [];
-            view.ManualSortMethod = new(_ =>
-            {
-                return;
-            });
             view.ManualRePosMethod = new((list, px, py) =>
             {
                 if (list.Count == 0)
@@ -346,6 +342,8 @@ namespace LargerInventory.UI.Inventory
                 OverrideTex = ModContent.Request<Texture2D>("Terraria/Images/UI/SearchCancel", AssetRequestMode.ImmediateLoad).Value
             });
             #endregion
+
+            view.Recalculate();
         }
 
 

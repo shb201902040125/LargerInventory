@@ -12,6 +12,7 @@ using Terraria;
 using Terraria.GameContent;
 using Terraria.GameContent.UI.Elements;
 using Terraria.GameInput;
+using Terraria.Localization;
 using Terraria.UI;
 using static LargerInventory.MiscHelper;
 using Inv = LargerInventory.BackEnd.Inventory;
@@ -26,10 +27,11 @@ public partial class InvUI : UIState
     private Vector2 oldPos;
     private UIView view;
     private UIPanel bg;
+    private UISearchBar input;
     private UIWaitRefresh waitText;
-    private bool waiting;
     private const string UIKey = "UI.Inventory.";
     private bool load;
+    private List<UIInvSlot> originSlots;
     internal bool needRefresh;
 
     public override void OnInitialize()
@@ -75,6 +77,20 @@ public partial class InvUI : UIState
         clear.OnLeftMouseDown += (_, _) => LISystem.filterUI.ClearFilters();
         bg.Append(clear);
 
+        UIPanel searchBg = new();
+        searchBg.SetSize(100, 30);
+        searchBg.SetPos(-100, 0, 1);
+        searchBg.BackgroundColor = Color.White;
+        searchBg.OnMouseOver += (evt, ls) => searchBg.BorderColor = Color.Gold;
+        searchBg.OnMouseOut += (evt, ls) => searchBg.BorderColor = Color.Black;
+        bg.Append(searchBg);
+
+        input = new(Language.GetText("Mods.LargerInventory.UI.Inventory.Common.Search"), 1f);
+        input.SetSize(0, 0, 1, 1);
+        input.OnContentsChanged += SearchItem;
+        searchBg.Append(input);
+        searchBg.OnLeftMouseDown += (evt, ls) => input.ToggleTakingText();
+
         UIImage line = new(TextureAssets.MagicPixel.Value)
         {
             ScaleToFit = true
@@ -103,12 +119,8 @@ public partial class InvUI : UIState
         view.SetSize(-40, 0, 1, 1);
         view.ManualRePosMethod = (list, px, py) =>
         {
-            if (waiting)
-            {
-                return 0;
-            }
             float h = 0;
-            float x = px, y = py;
+            float x = 0, y = 0;
             int w = view.GetDimensions().ToRectangle().Width;
             foreach (UIElement uie in list)
             {
@@ -118,7 +130,7 @@ public partial class InvUI : UIState
                 h = y + rect.Height;
                 if (x + rect.Width > w)
                 {
-                    x = px;
+                    x = 0;
                     y += rect.Height + py;
                 }
             }
@@ -132,16 +144,27 @@ public partial class InvUI : UIState
         view.SetScrollbar(scroll);
         viewBg.Append(scroll);
     }
+
+    private void SearchItem(string text)
+    {
+        LISystem.filterUI.currentFilter = text == string.Empty ? x => true : x => x.Name.Contains(text);
+        CallRefresh();
+    }
+
     public override void Update(GameTime gt)
     {
-        if (!waiting)
-        {
-            base.Update(gt);
-        }
+        base.Update(gt);
         if (bg.IsMouseHovering)
         {
             PlayerInput.LockVanillaMouseScroll(GetType().FullName);
             Main.LocalPlayer.mouseInterface = true;
+            if (Main.mouseLeft || Main.mouseRight)
+            {
+                if (input.IsWritingText && !input.Parent.ContainsPoint(Main.MouseScreen))
+                {
+                    input.ToggleTakingText();
+                }
+            }
         }
         if (needRefresh)
         {
@@ -172,27 +195,24 @@ public partial class InvUI : UIState
         scale = 0.75f;
         base.DrawChildren(spriteBatch);
         scale = old;
-
     }
     internal void Refresh(Task<List<Inv.InfoForUI>> task)
     {
         waitText.hide = false;
         if (task.IsCompletedSuccessfully)
         {
-            waiting = true;
             var items = task.Result;
             waitText.SetText(InvGTV("Common.WaitRefresh"));
             view.Clear();
-            view.Deactivate();
             int slotCount = 0;
-            List<UIInvSlot> temp = [];
+            originSlots = [];
             foreach (var info in items)
             {
                 UIInvSlot slot = new(info);
-                temp.Add(slot);
+                originSlots.Add(slot);
                 slotCount++;
             }
-            temp = [.. temp.OrderBy(slot => slot.Info.Item.favorited)
+            originSlots = [.. originSlots.OrderBy(slot => slot.Info.Item.favorited)
             .ThenBy(slot => slot.Info.Item.type)
             .ThenByDescending(slot => slot.Info.Item.stack)];
             var slotCountPerRow = (view.Width.Pixels - 10) / 62;
@@ -202,13 +222,13 @@ public partial class InvUI : UIState
                 while (slotCount < needCount)
                 {
                     UIInvSlot Empty = new(new(-1, -1, new()));
-                    temp.Add(Empty);
+                    originSlots.Add(Empty);
                     slotCount++;
                 }
             }
-            temp.ForEach(view.Add);
-            view.Activate();
-            waiting = false;
+            originSlots.ForEach(view.Add);
+
+            view.Recalculate();
             waitText.hide = true;
             return;
             //view.Recalculate();
@@ -229,5 +249,11 @@ public partial class InvUI : UIState
         Inv.StartRefreshTask(LISystem.filterUI.currentFilter, refreshToken, Refresh);
         //TODO 需要显示等待结果界面
     }
+    private void SubmitSearch(string text)
+    {
+        view.Clear();
+        originSlots.Where(x => x.Info.Item.Name.Contains(text)).ToList().ForEach(view.Add);
+    }
+    private void CancelSearch() { }
     private static string InvGTV(string key) => GTV(UIKey + key);
 }
