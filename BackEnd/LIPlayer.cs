@@ -4,6 +4,7 @@ using Terraria;
 using Terraria.GameInput;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 
 namespace LargerInventory.BackEnd
 {
@@ -19,30 +20,45 @@ namespace LargerInventory.BackEnd
             if (SwitchInv.JustPressed)
             {
                 InvUI.Ins.OnInitialize();
-                if (Inventory.Count == 0)
+                if (!InvToken.TryGetToken(out var token))
+                {
+                    return;
+                }
+                if (Inventory.GetCount(token) == 0)
                 {
                     for (int i = 1; i < ItemID.Count; i++)
                     {
                         Item item = new(i);
                         item.stack = Main.rand.Next(1, item.maxStack);
-                        Inventory.PushItem(item, out _);
+                        Inventory.PushItem(token, item, out _);
                     }
                 }
                 InvUI.Ins.CallRefresh();
                 if (!LISystem.filterUIF.IsVisible)
                 {
                     LISystem.invUIF.IsVisible = !LISystem.invUIF.IsVisible;
-                    if(!LISystem.invUIF.IsVisible)
+                    if (!LISystem.invUIF.IsVisible)
                     {
-                        Inventory.ClearAllEmptyItems();
+                        Inventory.ClearAllEmptyItems(token);
                     }
                 }
             }
         }
         public override void PostUpdate()
         {
-            Inventory.TryHealLife(Player);
-            Inventory.TryHealMana(Player);
+            if (InvToken.TryGetToken(out var token))
+            {
+                Inventory.TryHealLife(token, Player);
+                Inventory.TryHealMana(token, Player);
+            }
+        }
+        public override void SaveData(TagCompound tag)
+        {
+            Inventory.Save(tag);
+        }
+        public override void LoadData(TagCompound tag)
+        {
+            Inventory.Load(tag);
         }
     }
 }

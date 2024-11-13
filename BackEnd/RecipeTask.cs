@@ -8,12 +8,21 @@ using Terraria.GameContent.Achievements;
 using Terraria.ModLoader;
 using Terraria.ID;
 using Microsoft.Xna.Framework;
+using Terraria.DataStructures;
+using Terraria.ModLoader.IO;
+using System.Collections;
+using System.Text;
 
 namespace LargerInventory.BackEnd
 {
     internal class RecipeTask : GameEvent<RecipeTask, Dictionary<int, List<Item>>>
     {
         Recipe _targetRecipe;
+        public Recipe Recipe => _targetRecipe;
+        public RecipeTask(Recipe targetRecipe)
+        {
+            _targetRecipe = targetRecipe;
+        }
         public override bool Update(Dictionary<int, List<Item>> inv)
         {
             if (Main.mouseItem.stack > 0 && !ItemLoader.CanStack(Main.mouseItem, _targetRecipe.createItem))
@@ -53,6 +62,7 @@ namespace LargerInventory.BackEnd
                 foreach ((Item item, int consumedCount) in consumed)
                 {
                     item.stack -= consumedCount;
+                    ItemLoader.OnConsumeItem(item, Main.LocalPlayer);
                 }
                 Item crafted = _targetRecipe.createItem.Clone();
                 crafted.Prefix(-1);
@@ -66,6 +76,7 @@ namespace LargerInventory.BackEnd
                 {
                     Main.mouseItem = crafted;
                 }
+                ItemLoader.OnCreated(Main.mouseItem, new RecipeItemCreationContext(_targetRecipe, [.. consumed.Keys], Main.mouseItem));
                 Main.mouseItem.Center = Main.LocalPlayer.Center;
                 PopupText.NewText(PopupTextContext.ItemCraft, Main.mouseItem, _targetRecipe.createItem.stack, false, false);
                 if (Main.mouseItem.type > ItemID.None || _targetRecipe.createItem.type > ItemID.None)
@@ -107,6 +118,74 @@ namespace LargerInventory.BackEnd
             return fakeMap.OrderBy(kvp => !groupItem.Contains(kvp.Key))
                          .ThenBy(kvp => kvp.Key)
                          .ToDictionary();
+        }
+    }
+    internal class RecipeTaskTagSerializer : TagSerializer<RecipeTask, TagCompound>
+    {
+        public override RecipeTask Deserialize(TagCompound tag)
+        {
+            Recipe targetRecipe = null;
+            try
+            {
+                Item createItem = tag.Get<Item>(nameof(Recipe.createItem));
+                List<Item > requiredItem=tag.Get<List<Item>>(nameof(Recipe.requiredItem));
+                List<int> groups = [];
+                groups.AddRange(tag.Get<int[]>("trGroups"));
+                groups.AddRange(from string gettext in tag.Get<string[]>("modGroups") select RecipeGroup.recipeGroupIDs[gettext]);
+                string[] conditions = tag.Get<string[]>(nameof(Recipe.Conditions));
+                HashSet<int> hashedGroupIDs = new(groups);
+                HashSet<string> hashedConditions = new(conditions);
+                for (int i = 0; i < Recipe.maxRecipes; i++)
+                {
+                    Recipe recipe = Main.recipe[i];
+                    if (recipe is null)
+                    {
+                        goto Next;
+                    }
+                    if (recipe.createItem.type != createItem.type || recipe.createItem.stack != createItem.stack)
+                    {
+                        goto Next;
+                    }
+                    if (recipe.requiredItem.Count != requiredItem.Count)
+                    {
+                        goto Next;
+                    }
+                    for (int j = 0; j < recipe.requiredItem.Count; j++)
+                    {
+                        if (recipe.requiredItem[j].type != requiredItem[j].type || recipe.requiredItem[j].stack != recipe.requiredItem[j].stack)
+                        {
+                            goto Next;
+                        }
+                    }
+                    if (recipe.acceptedGroups.Count != hashedGroupIDs.Count || recipe.acceptedGroups.Any(id => !hashedGroupIDs.Contains(id)))
+                    {
+                        continue;
+                    }
+                    if (recipe.Conditions.Count != conditions.Length || recipe.Conditions.Any(condition => !hashedConditions.Contains(condition.Description.Key)))
+                    {
+                        goto Next;
+                    }
+                    targetRecipe = recipe;
+                    break;
+                Next:;
+                }
+            }
+            catch
+            {
+                targetRecipe = null;
+            }
+            return new RecipeTask(targetRecipe);
+        }
+        public override TagCompound Serialize(RecipeTask value)
+        {
+            var recipe = value.Recipe;
+            TagCompound tag = new();
+            tag[nameof(Recipe.createItem)] = recipe.createItem;
+            tag[nameof(Recipe.requiredItem)] = recipe.requiredItem;
+            tag["trGroup"] = (from int id in recipe.acceptedGroups where id < 26 select id).ToArray();
+            tag["modGroup"] = (from int id in recipe.acceptedGroups where id > 25 select RecipeGroup.recipeGroups[id].GetText).ToArray();
+            tag[nameof(Recipe.Conditions)] = (from Condition condition in recipe.Conditions select condition.Description.Key).ToArray();
+            return tag;
         }
     }
 }

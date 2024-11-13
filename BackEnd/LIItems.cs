@@ -10,9 +10,9 @@ namespace LargerInventory.BackEnd
         private bool ignoreSelfInfluence;
         public override bool ConsumeItem(Item item, Player player)
         {
-            if (!ignoreSelfInfluence && LIConfigs.Instance.ReplenishStockBeforeUse)
+            if (!ignoreSelfInfluence && LIConfigs.Instance.ReplenishStockBeforeUse && InvToken.TryGetToken(out var token))
             {
-                Inventory.PickItem(item, item.maxStack - item.stack);
+                Inventory.PickItem(token, item, item.maxStack - item.stack);
             }
             return base.ConsumeItem(item, player);
         }
@@ -28,14 +28,14 @@ namespace LargerInventory.BackEnd
             //    InvUI.Ins.Refresh();
             //}
             //return false;
-            if (!ignoreSelfInfluence)
+            if (!ignoreSelfInfluence&&InvToken.TryGetToken(out var token))
             {
                 ignoreSelfInfluence = true;
                 Player.ItemSpaceStatus status = player.ItemSpace(item);
                 ignoreSelfInfluence = false;
                 if (!status.CanTakeItem)
                 {
-                    Inventory.PushItem(item, out bool refresh);
+                    Inventory.PushItem(token,item, out bool refresh);
                     if (refresh)
                     {
                         InvUI.Ins.CallRefresh();

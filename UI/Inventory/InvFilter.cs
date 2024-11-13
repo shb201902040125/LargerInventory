@@ -382,8 +382,7 @@ namespace LargerInventory.UI.Inventory
         {
             currentFilter = new(i => filters?.All(f => !f.filterActive || f.MatchItem(i)) != false);
             refreshToken.ThrowIfCancellationRequested();
-            refreshToken = new();
-            BackEnd.Inventory.StartRefreshTask(currentFilter, refreshToken, InvUI.Ins.Refresh);
+            BackEnd.Inventory.StartRefreshTask(InvUI.Ins.Token, currentFilter, refreshToken, InvUI.Ins.Refresh);
         }
 
         public void ClearFilters()

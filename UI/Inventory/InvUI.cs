@@ -33,6 +33,7 @@ public partial class InvUI : UIState
     private bool load;
     private List<UIInvSlot> originSlots;
     internal bool needRefresh;
+    public InvToken.Token Token;
 
     public override void OnInitialize()
     {
@@ -246,7 +247,7 @@ public partial class InvUI : UIState
     {
         refreshToken.ThrowIfCancellationRequested();
         refreshToken = new();
-        Inv.StartRefreshTask(LISystem.filterUI.currentFilter, refreshToken, Refresh);
+        Inv.StartRefreshTask(Ins.Token, LISystem.filterUI.currentFilter, refreshToken, Refresh);
         //TODO 需要显示等待结果界面
     }
     private void SubmitSearch(string text)

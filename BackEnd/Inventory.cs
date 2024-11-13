@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 
 namespace LargerInventory.BackEnd
 {
@@ -16,12 +17,13 @@ namespace LargerInventory.BackEnd
         private static Dictionary<int, List<Item>> _items = [];
         private static NormalCache _cache = new();
         private static Item _fakeItem;
+        private static Queue<RecipeTask> _recipeTask = [];
 
         private const string CacheKey_CachedType = "cachedType";
         private const string CacheKey_HealLifeData = "healLifeData";
         private const string CacheKey_HealManaData = "healManaData";
 
-        public static int Count => _items.Values.Sum(items => items.Count);
+        public static int GetCount(InvToken.Token token) => token.InValid ? (_items.Values.Sum(items => items.Count)) : -1;
 
         private static void SplitItem(Item item, List<Item> container)
         {
@@ -133,8 +135,12 @@ namespace LargerInventory.BackEnd
                 .ThenBy(kvp => kvp.Key.type)
                 .First();
         }
-        public static void TryHealLife(Player player)
+        public static void TryHealLife(InvToken.Token token, Player player)
         {
+            if (!token.InValid)
+            {
+                return;
+            }
             if (player.potionDelay > 0)
             {
                 return;
@@ -148,11 +154,15 @@ namespace LargerInventory.BackEnd
             KeyValuePair<Item, int> bestMatch = FindBestMatch(GetOrCreateCache<Dictionary<Item, int>>(CacheKey_HealLifeData), cure);
             _fakeItem ??= new();
             _fakeItem.SetDefaults(bestMatch.Key.type);
-            PickItem(_fakeItem, 1);
+            PickItem(token, _fakeItem, 1);
             player.ApplyLifeAndOrMana(_fakeItem);
         }
-        public static void TryHealMana(Player player)
+        public static void TryHealMana(InvToken.Token token, Player player)
         {
+            if (!token.InValid)
+            {
+                return;
+            }
             if (player.potionDelay > 0)
             {
                 return;
@@ -166,7 +176,7 @@ namespace LargerInventory.BackEnd
             KeyValuePair<Item, int> bestMatch = FindBestMatch(GetOrCreateCache<Dictionary<Item, int>>(CacheKey_HealManaData), cure);
             _fakeItem ??= new();
             _fakeItem.SetDefaults(bestMatch.Key.type);
-            PickItem(_fakeItem, 1);
+            PickItem(token, _fakeItem, 1);
             player.ApplyLifeAndOrMana(_fakeItem);
         }
 
@@ -197,8 +207,13 @@ namespace LargerInventory.BackEnd
                 }
             }
         }
-        public static void PushItem(Item item, out bool refresh)
+        public static void PushItem(InvToken.Token token, Item item, out bool refresh)
         {
+            if (!token.InValid)
+            {
+                refresh = false;
+                return;
+            }
             refresh = false;
             if (!_items.TryGetValue(item.type, out List<Item> container))
             {
@@ -233,8 +248,12 @@ namespace LargerInventory.BackEnd
             refresh = count != container.Count;
             WriteCache(item.type);
         }
-        public static int PushItemToEnd(Item item, bool splitIfOverflow = true)
+        public static int PushItemToEnd(InvToken.Token token, Item item, bool splitIfOverflow = true)
         {
+            if (!token.InValid)
+            {
+                return -1;
+            }
             if (!_items.TryGetValue(item.type, out List<Item> container))
             {
                 _items[item.type] = container = [];
@@ -253,8 +272,12 @@ namespace LargerInventory.BackEnd
             WriteCache(item.type);
             return result;
         }
-        public static int PushItemToFirstEmptySlot(Item item, bool splitIfOverflow = true)
+        public static int PushItemToFirstEmptySlot(InvToken.Token token, Item item, bool splitIfOverflow = true)
         {
+            if (!token.InValid)
+            {
+                return -1;
+            }
             if (!_items.TryGetValue(item.type, out List<Item> container))
             {
                 _items[item.type] = container = [];
@@ -300,8 +323,12 @@ namespace LargerInventory.BackEnd
             WriteCache(item.type);
             return result;
         }
-        public static int PutItemToDesignatedIndex(Item item, int index)
+        public static int PutItemToDesignatedIndex(InvToken.Token token, Item item, int index)
         {
+            if (!token.InValid)
+            {
+                return -1;
+            }
             if (!_items.TryGetValue(item.type, out List<Item> container) || !container.IndexInRange(index))
             {
                 return -1;
@@ -323,8 +350,12 @@ namespace LargerInventory.BackEnd
             WriteCache(item.type);
             return move;
         }
-        public static int PickItem(Item item, int count)
+        public static int PickItem(InvToken.Token token, Item item, int count)
         {
+            if (!token.InValid)
+            {
+                return -1;
+            }
             if (!_items.TryGetValue(item.type, out List<Item> container))
             {
                 return 0;
@@ -350,8 +381,12 @@ namespace LargerInventory.BackEnd
             }
             return moved;
         }
-        public static int PickItemFromDesignatedIndex(Item item, int index, int count)
+        public static int PickItemFromDesignatedIndex(InvToken.Token token, Item item, int index, int count)
         {
+            if (!token.InValid)
+            {
+                return -1;
+            }
             if (!_items.TryGetValue(item.type, out List<Item> container) || !container.IndexInRange(index))
             {
                 return 0;
@@ -369,9 +404,13 @@ namespace LargerInventory.BackEnd
             ItemLoader.OnStack(item, target, move);
             return move;
         }
-        public static bool PopItems(int type, int index, [NotNullWhen(true)] out Item item)
+        public static bool PopItems(InvToken.Token token, int type, int index, [NotNullWhen(true)] out Item item)
         {
             item = null;
+            if (!token.InValid)
+            {
+                return false;
+            }
             if (!_items.TryGetValue(type, out List<Item> container) || container.IndexInRange(index))
             {
                 return false;
@@ -380,8 +419,12 @@ namespace LargerInventory.BackEnd
             container.RemoveAt(index);
             return true;
         }
-        public static void ClearAllEmptyItems(bool byCompress = true)
+        public static void ClearAllEmptyItems(InvToken.Token token, bool byCompress = true)
         {
+            if (!token.InValid)
+            {
+                return;
+            }
             if (byCompress)
             {
                 CompressAllItems();
@@ -394,12 +437,22 @@ namespace LargerInventory.BackEnd
                 });
             }
         }
-        internal static void StartRefreshTask(Func<Item, bool> lastInvItemFilter, CancellationToken refreshToken, Action<Task<List<InfoForUI>>> callback = null)
+        internal static void StartRefreshTask(InvToken.Token token, Func<Item, bool> lastInvItemFilter, CancellationToken refreshToken, Action<Task<List<InfoForUI>>> callback = null)
         {
+            if (!token.InValid)
+            {
+                return;
+            }
             Task<List<InfoForUI>> refreshTask = new(RefreshTask, lastInvItemFilter, refreshToken);
             if (callback is not null)
             {
-                refreshTask.ContinueWith(callback);
+                refreshTask.ContinueWith((state) =>
+                {
+                    Main.QueueMainThreadAction(() =>
+                    {
+                        callback(state);
+                    });
+                });
             }
             refreshTask.Start();
         }
@@ -431,12 +484,16 @@ namespace LargerInventory.BackEnd
             internal int Type { get; private set; }
             internal int Index { get; private set; }
             internal Item Item { get; private set; }
-            internal void Changed(ref Item newItem, bool clearNewItem = true)
+            internal void Changed(InvToken.Token token, ref Item newItem, bool clearNewItem = true)
             {
+                if (!token.InValid)
+                {
+                    return;
+                }
                 if (!_items.TryGetValue(Type, out var list) || !list.IndexInRange(Index))
                 {
                     Type = newItem.type;
-                    Index = PushItemToFirstEmptySlot(newItem);
+                    Index = PushItemToFirstEmptySlot(token, newItem);
                     Item = newItem;
                     if (clearNewItem)
                     {
@@ -459,7 +516,7 @@ namespace LargerInventory.BackEnd
                     {
                         _items[Type][Index] = new(Type, 0);
                         Type = newItem.type;
-                        Index = PushItemToFirstEmptySlot(newItem);
+                        Index = PushItemToFirstEmptySlot(token, newItem);
                         Item = _items[Type][Index];
                         if (clearNewItem)
                         {
@@ -479,7 +536,7 @@ namespace LargerInventory.BackEnd
                     {
                         _items[Type][Index] = new(Type, 0);
                         Type = newItem.type;
-                        Index = PushItemToFirstEmptySlot(newItem);
+                        Index = PushItemToFirstEmptySlot(token, newItem);
                         Item = newItem;
                         if (clearNewItem)
                         {
@@ -496,6 +553,73 @@ namespace LargerInventory.BackEnd
                 }
                 return;
             }
+        }
+
+        private static void UpdateRecipeTasks(object? state)
+        {
+            if(state is not TimeSpan updateStep)
+            {
+                updateStep = new TimeSpan(5 * TimeSpan.TicksPerSecond);
+            }
+            try
+            {
+                ManualResetEvent awakeEvent = new(false);
+                Ref<InvToken.Token> tokenRef = null;
+                while (true)
+                {
+                    awakeEvent.Reset();
+                    InvToken.WaitForToken(token => { tokenRef = new(token); awakeEvent.Set(); });
+                    awakeEvent.WaitOne();
+                    if (Monitor.TryEnter(_recipeTask) && _recipeTask.TryDequeue(out var recipeTask))
+                    {
+                        recipeTask.Update(_items);
+                        Monitor.Exit(_recipeTask);
+                    }
+                    tokenRef.Value.Return();
+                    Thread.Sleep(updateStep);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+
+            }
+            catch (Exception ex)
+            {
+                LargerInventory.Ins.Logger.Error(ex);
+            }
+        }
+        internal static void Save(TagCompound tag)
+        {
+            Ref<InvToken.Token> tokenRef = null;
+            ManualResetEvent awakeEvent = new(false);
+            InvToken.WaitForToken(token => { tokenRef = new(token); awakeEvent.Set(); });
+            awakeEvent.WaitOne();
+
+            tag[nameof(_items)] = _items.Values.ToList();
+            tag[nameof(_recipeTask)] = _recipeTask.ToList();
+
+            tokenRef.Value.Return();
+        }
+        internal static void Load(TagCompound tag)
+        {
+            Ref<InvToken.Token> tokenRef = null;
+            ManualResetEvent awakeEvent = new(false);
+            InvToken.WaitForToken(token => { tokenRef = new(token); awakeEvent.Set(); });
+            awakeEvent.WaitOne();
+
+            var items = tag.Get<List<List<Item>>>(nameof(_items));
+            var recipeTasks = tag.Get<List<RecipeTask>>(nameof(_recipeTask));
+            _items.Clear();
+            foreach(var list in items)
+            {
+                if(list.Count > 0)
+                {
+                    _items[list[0].type] = list;
+                }
+            }
+            _recipeTask=new Queue<RecipeTask>(recipeTasks);
+
+            tokenRef.Value.Return();
         }
     }
 }
