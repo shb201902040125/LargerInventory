@@ -451,6 +451,7 @@ namespace LargerInventory.BackEnd
                     Main.QueueMainThreadAction(() =>
                     {
                         callback(state);
+                        token.Return();
                     });
                 });
             }
@@ -484,8 +485,10 @@ namespace LargerInventory.BackEnd
             internal int Type { get; private set; }
             internal int Index { get; private set; }
             internal Item Item { get; private set; }
-            internal void Changed(InvToken.Token token, ref Item newItem, bool clearNewItem = true)
+            internal void Changed(ref Item newItem, bool clearNewItem = true)
             {
+                if (!InvToken.TryGetToken(out var token))
+                    return;
                 if (!token.InValid)
                 {
                     return;
@@ -557,7 +560,7 @@ namespace LargerInventory.BackEnd
 
         private static void UpdateRecipeTasks(object? state)
         {
-            if(state is not TimeSpan updateStep)
+            if (state is not TimeSpan updateStep)
             {
                 updateStep = new TimeSpan(5 * TimeSpan.TicksPerSecond);
             }
@@ -610,14 +613,14 @@ namespace LargerInventory.BackEnd
             var items = tag.Get<List<List<Item>>>(nameof(_items));
             var recipeTasks = tag.Get<List<RecipeTask>>(nameof(_recipeTask));
             _items.Clear();
-            foreach(var list in items)
+            foreach (var list in items)
             {
-                if(list.Count > 0)
+                if (list.Count > 0)
                 {
                     _items[list[0].type] = list;
                 }
             }
-            _recipeTask=new Queue<RecipeTask>(recipeTasks);
+            _recipeTask = new Queue<RecipeTask>(recipeTasks);
 
             tokenRef.Value.Return();
         }

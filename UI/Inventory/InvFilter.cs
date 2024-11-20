@@ -37,7 +37,7 @@ namespace LargerInventory.UI.Inventory
                 return;
             if (load)
                 return;
-                load = true;
+            load = true;
             bg = new()
             {
                 VAlign = 0.5f,
@@ -382,7 +382,11 @@ namespace LargerInventory.UI.Inventory
         {
             currentFilter = new(i => filters?.All(f => !f.filterActive || f.MatchItem(i)) != false);
             refreshToken.ThrowIfCancellationRequested();
-            BackEnd.Inventory.StartRefreshTask(InvUI.Ins.Token, currentFilter, refreshToken, InvUI.Ins.Refresh);
+            if (InvToken.TryGetToken(out var token) && token.InValid)
+            {
+                BackEnd.Inventory.StartRefreshTask(token, currentFilter, refreshToken, InvUI.Ins.Refresh);
+                token.Return();
+            }
         }
 
         public void ClearFilters()

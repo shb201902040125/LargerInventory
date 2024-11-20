@@ -30,10 +30,10 @@ namespace LargerInventory.UI.ExtraUI
             if (item.stack <= 0)
             {
                 Item temp = new();
-                Info.Changed(InvUI.Ins.Token, ref temp);
+                Info.Changed(ref temp);
             }
             else
-                Info.Changed(InvUI.Ins.Token, ref item, false);
+                Info.Changed(ref item, false);
         }
         private void UIInvSlot_OnLeftMouseDown(UIMouseEvent evt, UIElement listeningElement)
         {
@@ -78,7 +78,7 @@ namespace LargerInventory.UI.ExtraUI
                 if (source.stack == 0)
                 {
                     Item temp = new();
-                    Info.Changed(InvUI.Ins.Token, ref temp);
+                    Info.Changed(ref temp);
                     return;
                 }
                 rightDown = true;
@@ -93,7 +93,7 @@ namespace LargerInventory.UI.ExtraUI
                 if (source.stack == 0)
                 {
                     Item temp = new();
-                    Info.Changed(InvUI.Ins.Token, ref temp);
+                    Info.Changed(ref temp);
                     return;
                 }
                 rightDown = true;
@@ -117,7 +117,7 @@ namespace LargerInventory.UI.ExtraUI
                     if (source.stack <= 0)
                     {
                         Item temp = new();
-                        Info.Changed(InvUI.Ins.Token, ref temp);
+                        Info.Changed(ref temp);
                         time = 0;
                         return;
                     }
@@ -129,11 +129,11 @@ namespace LargerInventory.UI.ExtraUI
                         if (source.stack <= 0)
                         {
                             Item temp = new();
-                            Info.Changed(InvUI.Ins.Token, ref temp);
+                            Info.Changed(ref temp);
                             time = 0;
                             return;
                         }
-                        Info.Changed(InvUI.Ins.Token, ref source, false);
+                        Info.Changed(ref source, false);
                     }
                 }
                 time++;
@@ -171,7 +171,7 @@ namespace LargerInventory.UI.ExtraUI
             if (state.IsKeyDown(Keys.LeftShift))
             {
                 Item item = player.GetItem(Main.myPlayer, Info.Item, new());
-                Info.Changed(InvUI.Ins.Token, ref item);
+                Info.Changed(ref item);
                 return true;
             }
             if (state.IsKeyDown(Keys.LeftControl))
@@ -181,7 +181,7 @@ namespace LargerInventory.UI.ExtraUI
                     if (player.SellItem(Info.Item))
                     {
                         Item temp = new();
-                        Info.Changed(InvUI.Ins.Token, ref temp);
+                        Info.Changed(ref temp);
                         return true;
                     }
                 }
@@ -189,7 +189,7 @@ namespace LargerInventory.UI.ExtraUI
                 {
                     player.trashItem = Info.Item;
                     Item temp = new();
-                    Info.Changed(InvUI.Ins.Token, ref temp);
+                    Info.Changed(ref temp);
                     return true;
                 }
             }
