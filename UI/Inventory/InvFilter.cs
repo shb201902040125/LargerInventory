@@ -29,14 +29,20 @@ namespace LargerInventory.UI.Inventory
         private UIPanel bg;
         private List<UIItemFilter> filters;
         private const string UIKey = "UI.ItemFilter.";
-        CancellationToken refreshToken;
+        private CancellationToken refreshToken;
         public override void OnInitialize()
         {
             #region 基本设定
             if (Main.gameMenu)
+            {
                 return;
+            }
+
             if (load)
+            {
                 return;
+            }
+
             load = true;
             bg = new()
             {
@@ -54,7 +60,10 @@ namespace LargerInventory.UI.Inventory
             view.ManualRePosMethod = new((list, px, py) =>
             {
                 if (list.Count == 0)
+                {
                     return 0;
+                }
+
                 UIElement uie = list.Last();
                 return uie.Top.Pixels + uie.Height.Pixels;
             });
@@ -99,7 +108,7 @@ namespace LargerInventory.UI.Inventory
             float w = buttons.Max(x => x.Width.Pixels), y = 0;
             viewBg.SetSize(-w - 10, 0, 1, 1);
             viewBg.Recalculate();
-            foreach (var button in buttons)
+            foreach (UITextButton button in buttons)
             {
                 button.SetPos(-w, y, 1);
                 y += 40;
@@ -135,7 +144,10 @@ namespace LargerInventory.UI.Inventory
             {
                 x = 0;
                 if (moveY)
+                {
                     y += 70;
+                }
+
                 UIItemFilter leader = new(filter)
                 {
                     OverrideTex = head,
@@ -226,8 +238,8 @@ namespace LargerInventory.UI.Inventory
             int count = DamageClassLoader.DamageClassCount;
             for (int i = 0; i < count; i++)
             {
-                var dc = DamageClassLoader.GetDamageClass(i);
-                var filter = new UIDamageClassFilter(dc)
+                DamageClass dc = DamageClassLoader.GetDamageClass(i);
+                UIDamageClassFilter filter = new UIDamageClassFilter(dc)
                 {
                     Label = dc.DisplayName.Value.ToString().Replace(" ", "") + "\n" + dc.PrettyPrintName()
                 };
@@ -253,7 +265,7 @@ namespace LargerInventory.UI.Inventory
             UICheckBoxText vanity = new(FilterGTV("Filters.IsEquip.IsVanity"));
             vanity.OnLeftClick += (evt, le) =>
             {
-                foreach (var filter in filters)
+                foreach (UIItemFilter filter in filters)
                 {
                     if (filter is UIEquipFilter equip)
                     {
@@ -265,7 +277,7 @@ namespace LargerInventory.UI.Inventory
             view.Add(vanity);
 
             AppendLine();
-            var equips = Enum.GetValues<EquipType>().ToArray();
+            EquipType[] equips = Enum.GetValues<EquipType>().ToArray();
             count = equips.Length;
             for (int i = 0; i < count; i++)
             {
@@ -369,7 +381,7 @@ namespace LargerInventory.UI.Inventory
 
         private void ChangeDamageClassMatchType(int type)
         {
-            foreach (var filter in filters)
+            foreach (UIItemFilter filter in filters)
             {
                 if (filter is UIDamageClassFilter dcF)
                 {

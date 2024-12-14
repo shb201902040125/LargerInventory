@@ -27,7 +27,9 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
                     Vector2 position2 = element.GetDimensions().Position();
                     Vector2 dimensions2 = new Vector2(element.GetDimensions().Width, element.GetDimensions().Height);
                     if (Collision.CheckAABBvAABBCollision(position, dimensions, position2, dimensions2))
+                    {
                         element.Draw(spriteBatch);
+                    }
                 }
             }
         }
@@ -36,7 +38,7 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
     }
 
     //TML: Made public instead of protected.
-    public List<UIElement> _items = new List<UIElement>();
+    public List<UIElement> _items = [];
     protected UIScrollbar _scrollbar;
     //TML: Made internal instead of private.
     internal UIElement _innerList = new UIInnerList();
@@ -100,7 +102,9 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
     {
         base.ScrollWheel(evt);
         if (_scrollbar != null)
+        {
             _scrollbar.ViewPosition -= evt.ScrollWheelValue;
+        }
     }
 
     public override void RecalculateChildren()
@@ -144,9 +148,11 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
 
     public override List<SnapPoint> GetSnapPoints()
     {
-        List<SnapPoint> list = new List<SnapPoint>();
-        if (GetSnapPoint(out var point))
+        List<SnapPoint> list = [];
+        if (GetSnapPoint(out SnapPoint point))
+        {
             list.Add(point);
+        }
 
         foreach (UIElement item in _items)
         {
@@ -162,7 +168,10 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
         DrawDebugHitbox(Main.DebugDrawer);
         Main.DebugDrawer.End();
         if (_scrollbar != null)
+        {
             _innerList.Top.Set(0f - _scrollbar.GetValue(), 0f);
+        }
+
         Recalculate();
     }
     public override void Draw(SpriteBatch spriteBatch)

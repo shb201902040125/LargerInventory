@@ -1,46 +1,43 @@
-﻿using SML.Common;
+﻿using Microsoft.Xna.Framework;
+using SML.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
 using Terraria.Audio;
-using Terraria.GameContent.Achievements;
-using Terraria.ModLoader;
-using Terraria.ID;
-using Microsoft.Xna.Framework;
 using Terraria.DataStructures;
+using Terraria.GameContent.Achievements;
+using Terraria.ID;
+using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
-using System.Collections;
-using System.Text;
 
 namespace LargerInventory.BackEnd
 {
     internal class RecipeTask : GameEvent<RecipeTask, Dictionary<int, List<Item>>>
     {
-        Recipe _targetRecipe;
-        public Recipe Recipe => _targetRecipe;
+        public Recipe Recipe { get; }
         public RecipeTask(Recipe targetRecipe)
         {
-            _targetRecipe = targetRecipe;
+            Recipe = targetRecipe;
         }
         public override bool Update(Dictionary<int, List<Item>> inv)
         {
-            if (Main.mouseItem.stack > 0 && !ItemLoader.CanStack(Main.mouseItem, _targetRecipe.createItem))
+            if (Main.mouseItem.stack > 0 && !ItemLoader.CanStack(Main.mouseItem, Recipe.createItem))
             {
                 return false;
             }
-            var fakeMap = CreateFakeMap();
-            var checkMap = fakeMap.Values.ToHashSet();
+            Dictionary<int, Ref<int>> fakeMap = CreateFakeMap();
+            HashSet<Ref<int>> checkMap = fakeMap.Values.ToHashSet();
             Dictionary<Item, int> consumed = [];
-            foreach (var type in fakeMap.Keys)
+            foreach (int type in fakeMap.Keys)
             {
-                if (fakeMap[type].Value == 0 || !inv.TryGetValue(type, out var container))
+                if (fakeMap[type].Value == 0 || !inv.TryGetValue(type, out List<Item> container))
                 {
                     continue;
                 }
                 for (int index = container.Count - 1; index >= 0; index--)
                 {
-                    var item = container[index];
+                    Item item = container[index];
                     if (item.favorited)
                     {
                         continue;
@@ -64,10 +61,10 @@ namespace LargerInventory.BackEnd
                     item.stack -= consumedCount;
                     ItemLoader.OnConsumeItem(item, Main.LocalPlayer);
                 }
-                Item crafted = _targetRecipe.createItem.Clone();
+                Item crafted = Recipe.createItem.Clone();
                 crafted.Prefix(-1);
-                AchievementsHelper.NotifyItemCraft(_targetRecipe);
-                AchievementsHelper.NotifyItemPickup(Main.player[Main.myPlayer], _targetRecipe.createItem);
+                AchievementsHelper.NotifyItemCraft(Recipe);
+                AchievementsHelper.NotifyItemPickup(Main.player[Main.myPlayer], Recipe.createItem);
                 if (Main.mouseItem.stack > 0)
                 {
                     ItemLoader.StackItems(Main.mouseItem, crafted, out int num, false, null);
@@ -76,10 +73,10 @@ namespace LargerInventory.BackEnd
                 {
                     Main.mouseItem = crafted;
                 }
-                ItemLoader.OnCreated(Main.mouseItem, new RecipeItemCreationContext(_targetRecipe, [.. consumed.Keys], Main.mouseItem));
+                ItemLoader.OnCreated(Main.mouseItem, new RecipeItemCreationContext(Recipe, [.. consumed.Keys], Main.mouseItem));
                 Main.mouseItem.Center = Main.LocalPlayer.Center;
-                PopupText.NewText(PopupTextContext.ItemCraft, Main.mouseItem, _targetRecipe.createItem.stack, false, false);
-                if (Main.mouseItem.type > ItemID.None || _targetRecipe.createItem.type > ItemID.None)
+                PopupText.NewText(PopupTextContext.ItemCraft, Main.mouseItem, Recipe.createItem.stack, false, false);
+                if (Main.mouseItem.type > ItemID.None || Recipe.createItem.type > ItemID.None)
                 {
                     SoundEngine.PlaySound(SoundID.Grab with { Volume = 1, Pitch = 0 }, -Vector2.One);
                 }
@@ -89,7 +86,7 @@ namespace LargerInventory.BackEnd
         private Dictionary<int, Ref<int>> CreateFakeMap()
         {
             Dictionary<int, Ref<int>> fakeMap = [];
-            foreach (var item in _targetRecipe.requiredItem)
+            foreach (Item item in Recipe.requiredItem)
             {
                 if (fakeMap.TryGetValue(item.type, out Ref<int> required))
                 {
@@ -102,12 +99,12 @@ namespace LargerInventory.BackEnd
             }
 
             HashSet<int> groupItem = [];
-            foreach (var groupID in _targetRecipe.acceptedGroups)
+            foreach (int groupID in Recipe.acceptedGroups)
             {
-                var group = RecipeGroup.recipeGroups[groupID];
-                var targetType = group.IconicItemId;
+                RecipeGroup group = RecipeGroup.recipeGroups[groupID];
+                int targetType = group.IconicItemId;
                 groupItem.Add(groupID);
-                foreach (var unit in group.ValidItems)
+                foreach (int unit in group.ValidItems)
                 {
                     if (!fakeMap.ContainsKey(unit))
                     {
@@ -128,7 +125,7 @@ namespace LargerInventory.BackEnd
             try
             {
                 Item createItem = tag.Get<Item>(nameof(Recipe.createItem));
-                List<Item > requiredItem=tag.Get<List<Item>>(nameof(Recipe.requiredItem));
+                List<Item> requiredItem = tag.Get<List<Item>>(nameof(Recipe.requiredItem));
                 List<int> groups = [];
                 groups.AddRange(tag.Get<int[]>("trGroups"));
                 groups.AddRange(from string gettext in tag.Get<string[]>("modGroups") select RecipeGroup.recipeGroupIDs[gettext]);
@@ -178,13 +175,15 @@ namespace LargerInventory.BackEnd
         }
         public override TagCompound Serialize(RecipeTask value)
         {
-            var recipe = value.Recipe;
-            TagCompound tag = new();
-            tag[nameof(Recipe.createItem)] = recipe.createItem;
-            tag[nameof(Recipe.requiredItem)] = recipe.requiredItem;
-            tag["trGroup"] = (from int id in recipe.acceptedGroups where id < 26 select id).ToArray();
-            tag["modGroup"] = (from int id in recipe.acceptedGroups where id > 25 select RecipeGroup.recipeGroups[id].GetText).ToArray();
-            tag[nameof(Recipe.Conditions)] = (from Condition condition in recipe.Conditions select condition.Description.Key).ToArray();
+            Recipe recipe = value.Recipe;
+            TagCompound tag = new()
+            {
+                [nameof(Recipe.createItem)] = recipe.createItem,
+                [nameof(Recipe.requiredItem)] = recipe.requiredItem,
+                ["trGroup"] = (from int id in recipe.acceptedGroups where id < 26 select id).ToArray(),
+                ["modGroup"] = (from int id in recipe.acceptedGroups where id > 25 select RecipeGroup.recipeGroups[id].GetText).ToArray(),
+                [nameof(Recipe.Conditions)] = (from Condition condition in recipe.Conditions select condition.Description.Key).ToArray()
+            };
             return tag;
         }
     }

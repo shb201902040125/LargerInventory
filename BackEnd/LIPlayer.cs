@@ -20,7 +20,7 @@ namespace LargerInventory.BackEnd
             if (SwitchInv.JustPressed)
             {
                 InvUI.Ins.OnInitialize();
-                if (!InvToken.TryGetToken(out var token))
+                if (!InvToken.TryGetToken(out InvToken.Token token))
                 {
                     return;
                 }
@@ -42,14 +42,16 @@ namespace LargerInventory.BackEnd
                         Inventory.ClearAllEmptyItems(token);
                     }
                 }
+                token.Return();
             }
         }
         public override void PostUpdate()
         {
-            if (InvToken.TryGetToken(out var token))
+            if (InvToken.TryGetToken(out InvToken.Token token))
             {
                 Inventory.TryHealLife(token, Player);
                 Inventory.TryHealMana(token, Player);
+                token.Return();
             }
         }
         public override void SaveData(TagCompound tag)

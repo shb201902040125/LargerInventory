@@ -9,7 +9,7 @@ namespace LargerInventory.BackEnd
 {
     public class InvItemFilter
     {
-        Func<Item, bool> _filter;
+        private Func<Item, bool> _filter;
         public InvItemFilter(Func<Item, bool> predicate)
         {
             _filter = predicate;
@@ -48,11 +48,9 @@ namespace LargerInventory.BackEnd
                     }
                 case CombineType.CountTrue:
                     {
-                        if (extra is not int target)
-                        {
-                            throw new ArgumentException("When CombineType is CountTrue, extra should be of type int", nameof(extra));
-                        }
-                        return new(item =>
+                        return extra is not int target
+                            ? throw new ArgumentException("When CombineType is CountTrue, extra should be of type int", nameof(extra))
+                            : new(item =>
                         {
                             int count = 0;
                             for (int i = 0; i < invItemFilters.Length; i++)
@@ -71,11 +69,9 @@ namespace LargerInventory.BackEnd
                     }
                 case CombineType.CountFalse:
                     {
-                        if (extra is not int target)
-                        {
-                            throw new ArgumentException("When CombineType is CountFalse, extra should be of type int", nameof(extra));
-                        }
-                        return new(item =>
+                        return extra is not int target
+                            ? throw new ArgumentException("When CombineType is CountFalse, extra should be of type int", nameof(extra))
+                            : new(item =>
                         {
                             int count = 0;
                             for (int i = 0; i < invItemFilters.Length; i++)
@@ -111,7 +107,7 @@ namespace LargerInventory.BackEnd
             public static readonly InvItemFilter Default = new(i => true);
 
             public static readonly InvItemFilter IsWeapon = new(i => i.damage > 0 && i.useStyle != ItemUseStyleID.None);
-            static InvItemFilter _isDamageClass_0, _isDamageClass_1, _isDamageClass_2;
+            private static InvItemFilter _isDamageClass_0, _isDamageClass_1, _isDamageClass_2;
             /// <summary>
             /// Get a <see cref="InvItemFilter"/> for given DamageClass
             /// </summary>
@@ -131,14 +127,14 @@ namespace LargerInventory.BackEnd
             public static readonly InvItemFilter IsAxe = new(i => i.axe > 0);
             public static readonly InvItemFilter IsHammer = new(i => i.hammer > 0);
             public static readonly InvItemFilter IsPick = new(i => i.pick > 0);
-            static InvItemFilter _isTool;
+            private static InvItemFilter _isTool;
             public static InvItemFilter IsTool => _isTool ??= Combine(CombineType.AnyTrue, null, IsAxe, IsHammer, IsPick);
 
-            static InvItemFilter _isArmor;
+            private static InvItemFilter _isArmor;
             public static InvItemFilter IsArmor => _isArmor ??= Combine(CombineType.AnyTrue, null,
                 IsEquip(EquipType.Head), IsEquip(EquipType.Body), IsEquip(EquipType.Legs));
 
-            private readonly static Dictionary<EquipType, InvItemFilter> _isEquip = [];
+            private static readonly Dictionary<EquipType, InvItemFilter> _isEquip = [];
             private static InvItemFilter CheckEquip(EquipType equip) => equip switch
             {
                 EquipType.Head => new(i => i.headSlot > 0),
@@ -158,10 +154,10 @@ namespace LargerInventory.BackEnd
                 EquipType.Beard => new(i => i.beardSlot > 0),
                 _ => null,
             };
-            public readonly static InvItemFilter CanEquip = Combine(CombineType.AnyTrue, null, LoadEquipFilter());
+            public static readonly InvItemFilter CanEquip = Combine(CombineType.AnyTrue, null, LoadEquipFilter());
             private static InvItemFilter[] LoadEquipFilter()
             {
-                foreach (var equip in Enum.GetValues<EquipType>())
+                foreach (EquipType equip in Enum.GetValues<EquipType>())
                 {
                     _isEquip[equip] = CheckEquip(equip);
                 }
@@ -198,8 +194,7 @@ namespace LargerInventory.BackEnd
 
             public static readonly InvItemFilter IsMaterial = new(i => i.material);
             public static readonly InvItemFilter IsCurrency = new(i => i.IsCurrency || i.IsACoin);
-
-            static InvItemFilter _exclusionAll;
+            private static InvItemFilter _exclusionAll;
             public static InvItemFilter ExclusionAll => _exclusionAll ??= Combine(CombineType.AllFalse, null,
                 IsWeapon, IsTool, CanEquip, IsAccessory, IsPlaceableTile, IsPlaceableWall, IsConsumeable, IsMaterial, IsCurrency);
         }

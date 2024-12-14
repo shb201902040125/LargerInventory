@@ -37,9 +37,15 @@ public class InvUI : UIState
     public override void OnInitialize()
     {
         if (Main.gameMenu)
+        {
             return;
+        }
+
         if (load)
+        {
             return;
+        }
+
         load = true;
         bg = new()
         {
@@ -201,12 +207,12 @@ public class InvUI : UIState
         waitText.hide = false;
         if (task.IsCompletedSuccessfully)
         {
-            var items = task.Result;
+            List<Inv.InfoForUI> items = task.Result;
             waitText.SetText(InvGTV("Common.WaitRefresh"));
             view.Clear();
             int slotCount = 0;
             originSlots = [];
-            foreach (var info in items)
+            foreach (Inv.InfoForUI info in items)
             {
                 UIInvSlot slot = new(info);
                 originSlots.Add(slot);
@@ -215,7 +221,7 @@ public class InvUI : UIState
             originSlots = [.. originSlots.OrderBy(slot => slot.Info.Item.favorited)
             .ThenBy(slot => slot.Info.Item.type)
             .ThenByDescending(slot => slot.Info.Item.stack)];
-            var slotCountPerRow = (view.Width.Pixels - 10) / 62;
+            float slotCountPerRow = (view.Width.Pixels - 10) / 62;
             int needCount = (int)(Math.Ceiling(slotCount / slotCountPerRow) * slotCountPerRow);
             if (needCount > slotCount)
             {
@@ -238,10 +244,11 @@ public class InvUI : UIState
     }
     private List<UIItemFilter> CreateFilter()
     {
-        List<UIItemFilter> filters = new();
+        List<UIItemFilter> filters = [];
         return filters;
     }
-    CancellationToken refreshToken;
+
+    private CancellationToken refreshToken;
     internal void CallRefresh()
     {
         refreshToken.ThrowIfCancellationRequested();

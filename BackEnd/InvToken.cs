@@ -1,18 +1,15 @@
 ﻿using SML.Common;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace LargerInventory.BackEnd
 {
     public class InvToken
     {
-        static object _lock = new();
-        static bool inLock = false;
-        static Queue<Action<Token>> _waitForTokens = [];
+        private static object _lock = new();
+        private static bool inLock = false;
+        private static Queue<Action<Token>> _waitForTokens = [];
         public class Token
         {
             private DisposeWapper _disposeWapper;
@@ -41,20 +38,22 @@ namespace LargerInventory.BackEnd
             {
                 return;
             }
-            if (TryGetToken(out var token))
+            if (TryGetToken(out Token token))
             {
                 whenGetToken(token);
+                token.Return();
             }
             else
             {
                 _waitForTokens.Enqueue(whenGetToken);
             }
         }
-        static void ReturnToken()
+
+        private static void ReturnToken()
         {
             Monitor.Enter(_lock);
             inLock = false;
-            if (_waitForTokens.TryDequeue(out var waiter))
+            if (_waitForTokens.TryDequeue(out Action<Token> waiter))
             {
                 Token token = new(new(ReturnToken));
                 Monitor.Exit(_lock);
