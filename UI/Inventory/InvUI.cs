@@ -19,7 +19,7 @@ using Inv = LargerInventory.BackEnd.Inventory;
 
 namespace LargerInventory.UI.Inventory;
 
-public partial class InvUI : UIState
+public class InvUI : UIState
 {
     internal static InvUI Ins { get; private set; }
     public InvUI() => Ins = this;
