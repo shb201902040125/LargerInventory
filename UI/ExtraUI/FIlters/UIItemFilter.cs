@@ -36,22 +36,22 @@ namespace LargerInventory.UI.ExtraUI.FIlters
             IconItemID = FindItemIcon();
             OnLeftMouseDown += (evt, ls) =>
             {
-                if (filterActive)
-                    filterActive = Reverse = false;
-                else
-                    filterActive = true;
+                filterActive = !filterActive || (Reverse = false);
             };
             OnRightMouseDown += (evt, ls) =>
             {
                 if (!filterActive)
+                {
                     filterActive = true;
+                }
+
                 Reverse = !Reverse;
             };
         }
         protected override void DrawSelf(SpriteBatch sb)
         {
-            var local = GetDimensions();
-            var rect = local.ToRectangle();
+            CalculatedStyle local = GetDimensions();
+            Rectangle rect = local.ToRectangle();
             sb.Draw(TextureAssets.InventoryBack16.Value, rect,
                 (filterActive ? Reverse ? Color.Coral : Color.LightGreen : Color.White) * 0.75f);
             if (IsMouseHovering)
@@ -62,7 +62,7 @@ namespace LargerInventory.UI.ExtraUI.FIlters
                     Main.hoverItemName += Label + "\n";
                 }
             }
-            var center = local.Center();
+            Vector2 center = local.Center();
             if (OverrideTex != null)
             {
                 sb.Draw(OverrideTex, center, sourceRect, Color.White, 0,
@@ -70,7 +70,10 @@ namespace LargerInventory.UI.ExtraUI.FIlters
                 return;
             }
             if (IconItemID <= 0)
+            {
                 return;
+            }
+
             float old = Main.inventoryScale;
             Main.inventoryScale = 0.75f;
             ItemSlot.DrawItemIcon(ContentSamples.ItemsByType[IconItemID], 0, sb,
@@ -81,10 +84,10 @@ namespace LargerInventory.UI.ExtraUI.FIlters
         {
             if (vnl == null)
             {
-                var items = ContentSamples.ItemsByType.Values.ToList();
+                List<Item> items = ContentSamples.ItemsByType.Values.ToList();
                 vnl = [];
                 mods = [];
-                foreach (var item in items)
+                foreach (Item item in items)
                 {
                     (item.type < ItemID.Count ? vnl : mods).Add(item);
                 }

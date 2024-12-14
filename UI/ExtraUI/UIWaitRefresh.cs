@@ -17,7 +17,10 @@ namespace LargerInventory.UI.ExtraUI
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (hide)
+            {
                 return;
+            }
+
             base.Draw(spriteBatch);
         }
     }

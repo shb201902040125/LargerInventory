@@ -16,8 +16,8 @@ namespace LargerInventory.UI.ExtraUI
     public class UIInvSlot : UIElement
     {
         internal Inv.InfoForUI Info;
-        bool rightDown;
-        int time;
+        private bool rightDown;
+        private int time;
         public UIInvSlot(Inv.InfoForUI info)
         {
             Info = info;
@@ -33,7 +33,9 @@ namespace LargerInventory.UI.ExtraUI
                 Info.Changed(InvUI.Ins.Token, ref temp);
             }
             else
+            {
                 Info.Changed(InvUI.Ins.Token, ref item, false);
+            }
         }
         private void UIInvSlot_OnLeftMouseDown(UIMouseEvent evt, UIElement listeningElement)
         {
@@ -70,7 +72,10 @@ namespace LargerInventory.UI.ExtraUI
             if (mouse.type == ItemID.None)
             {
                 if (source.IsAir)
+                {
                     return;
+                }
+
                 Main.playerInventory = true;
                 Main.mouseItem = source.Clone();
                 Main.mouseItem.stack = 1;
@@ -86,7 +91,10 @@ namespace LargerInventory.UI.ExtraUI
             else if (mouse.type == source.type)
             {
                 if (source.stack <= 0 || !ItemLoader.CanStack(mouse, source))
+                {
                     return;
+                }
+
                 Main.playerInventory = true;
                 mouse.stack++;
                 source.stack--;
@@ -141,7 +149,7 @@ namespace LargerInventory.UI.ExtraUI
         }
         protected override void DrawSelf(SpriteBatch sb)
         {
-            var item = Info.Item;
+            Item item = Info.Item;
             Rectangle rect = GetDimensions().ToRectangle();
             sb.Draw(!item.IsAir && item.favorited ? TextureAssets.InventoryBack10.Value : TextureAssets.InventoryBack.Value, rect, Color.White);
             if (item.stack > 0)
@@ -154,8 +162,11 @@ namespace LargerInventory.UI.ExtraUI
                 }
                 ItemSlot.DrawItemIcon(item, 0, sb, rect.Center.ToVector2(), Main.inventoryScale, 52 * Main.inventoryScale, Color.White);
                 if (item.stack == 1)
+                {
                     return;
-                var font = FontAssets.ItemStack.Value;
+                }
+
+                ReLogic.Graphics.DynamicSpriteFont font = FontAssets.ItemStack.Value;
                 string stack = item.stack.ToString();
                 Vector2 size = font.MeasureString(stack);
                 Vector2 offset = new Vector2(8, -24) * 0.8f;
@@ -166,7 +177,7 @@ namespace LargerInventory.UI.ExtraUI
         }
         private bool HandleLeftClick()
         {
-            var state = Keyboard.GetState();
+            KeyboardState state = Keyboard.GetState();
             Player player = Main.LocalPlayer;
             if (state.IsKeyDown(Keys.LeftShift))
             {
@@ -203,7 +214,7 @@ namespace LargerInventory.UI.ExtraUI
         }
         private void OverrideCurosr()
         {
-            var state = Keyboard.GetState();
+            KeyboardState state = Keyboard.GetState();
             if (state.IsKeyDown(Keys.LeftShift))
             {
                 Main.cursorOverride = CursorOverrideID.BackInventory;

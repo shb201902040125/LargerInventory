@@ -23,7 +23,7 @@ namespace LargerInventory.BackEnd
         private const string CacheKey_HealLifeData = "healLifeData";
         private const string CacheKey_HealManaData = "healManaData";
 
-        public static int GetCount(InvToken.Token token) => token.InValid ? (_items.Values.Sum(items => items.Count)) : -1;
+        public static int GetCount(InvToken.Token token) => token.InValid ? _items.Values.Sum(items => items.Count) : -1;
 
         private static void SplitItem(Item item, List<Item> container)
         {
@@ -184,10 +184,10 @@ namespace LargerInventory.BackEnd
         {
             if (item.type != type)
             {
-                var cacheStack = item.stack;
-                var cachePrefix = item.prefix;
-                var cacheFavorited = item.favorited;
-                var cacheNewAndShiny = item.newAndShiny;
+                int cacheStack = item.stack;
+                int cachePrefix = item.prefix;
+                bool cacheFavorited = item.favorited;
+                bool cacheNewAndShiny = item.newAndShiny;
                 item.SetDefaults(type);
                 if (keepStack)
                 {
@@ -456,15 +456,16 @@ namespace LargerInventory.BackEnd
             }
             refreshTask.Start();
         }
-        static List<InfoForUI> RefreshTask(object state)
+
+        private static List<InfoForUI> RefreshTask(object state)
         {
             Func<Item, bool> filter = state is Func<Item, bool> f ? f : InvItemFilter.FilterPrefab.Default.Check;
             List<InfoForUI> list = [];
-            foreach (var type in _items.Keys)
+            foreach (int type in _items.Keys)
             {
                 for (int index = 0; index < _items[type].Count; index++)
                 {
-                    var item = _items[type][index];
+                    Item item = _items[type][index];
                     if (!item.IsAir && filter(item))
                     {
                         list.Add(new(type, index, item));
@@ -490,7 +491,7 @@ namespace LargerInventory.BackEnd
                 {
                     return;
                 }
-                if (!_items.TryGetValue(Type, out var list) || !list.IndexInRange(Index))
+                if (!_items.TryGetValue(Type, out List<Item> list) || !list.IndexInRange(Index))
                 {
                     Type = newItem.type;
                     Index = PushItemToFirstEmptySlot(token, newItem);
@@ -557,7 +558,7 @@ namespace LargerInventory.BackEnd
 
         private static void UpdateRecipeTasks(object? state)
         {
-            if(state is not TimeSpan updateStep)
+            if (state is not TimeSpan updateStep)
             {
                 updateStep = new TimeSpan(5 * TimeSpan.TicksPerSecond);
             }
@@ -570,7 +571,7 @@ namespace LargerInventory.BackEnd
                     awakeEvent.Reset();
                     InvToken.WaitForToken(token => { tokenRef = new(token); awakeEvent.Set(); });
                     awakeEvent.WaitOne();
-                    if (Monitor.TryEnter(_recipeTask) && _recipeTask.TryDequeue(out var recipeTask))
+                    if (Monitor.TryEnter(_recipeTask) && _recipeTask.TryDequeue(out RecipeTask recipeTask))
                     {
                         recipeTask.Update(_items);
                         Monitor.Exit(_recipeTask);
@@ -607,17 +608,17 @@ namespace LargerInventory.BackEnd
             InvToken.WaitForToken(token => { tokenRef = new(token); awakeEvent.Set(); });
             awakeEvent.WaitOne();
 
-            var items = tag.Get<List<List<Item>>>(nameof(_items));
-            var recipeTasks = tag.Get<List<RecipeTask>>(nameof(_recipeTask));
+            List<List<Item>> items = tag.Get<List<List<Item>>>(nameof(_items));
+            List<RecipeTask> recipeTasks = tag.Get<List<RecipeTask>>(nameof(_recipeTask));
             _items.Clear();
-            foreach(var list in items)
+            foreach (List<Item> list in items)
             {
-                if(list.Count > 0)
+                if (list.Count > 0)
                 {
                     _items[list[0].type] = list;
                 }
             }
-            _recipeTask=new Queue<RecipeTask>(recipeTasks);
+            _recipeTask = new Queue<RecipeTask>(recipeTasks);
 
             tokenRef.Value.Return();
         }
