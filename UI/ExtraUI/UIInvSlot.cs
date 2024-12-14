@@ -1,4 +1,4 @@
-﻿using LargerInventory.UI.Inventory;
+﻿using LargerInventory.BackEnd;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -30,7 +30,10 @@ namespace LargerInventory.UI.ExtraUI
             if (item.stack <= 0)
             {
                 Item temp = new();
-                Info.Changed(InvUI.Ins.Token, ref temp);
+                if (InvToken.TryGetToken(out var token))
+                {
+                    Info.Changed(token, ref temp);
+                }
             }
             else
             {
@@ -83,7 +86,10 @@ namespace LargerInventory.UI.ExtraUI
                 if (source.stack == 0)
                 {
                     Item temp = new();
-                    Info.Changed(InvUI.Ins.Token, ref temp);
+                    if (InvToken.TryGetToken(out var token))
+                    {
+                        Info.Changed(token, ref temp);
+                    }
                     return;
                 }
                 rightDown = true;
@@ -101,7 +107,10 @@ namespace LargerInventory.UI.ExtraUI
                 if (source.stack == 0)
                 {
                     Item temp = new();
-                    Info.Changed(InvUI.Ins.Token, ref temp);
+                    if (InvToken.TryGetToken(out var token))
+                    {
+                        Info.Changed(token, ref temp);
+                    }
                     return;
                 }
                 rightDown = true;
@@ -122,10 +131,14 @@ namespace LargerInventory.UI.ExtraUI
                     int mult = (time - 20) / 5;
                     int space = (int)Math.Sqrt(20 - Math.Min(mult, 19));
                     Item source = Info.Item;
+                    InvToken.Token token;
                     if (source.stack <= 0)
                     {
                         Item temp = new();
-                        Info.Changed(InvUI.Ins.Token, ref temp);
+                        if (InvToken.TryGetToken(out token))
+                        {
+                            Info.Changed(token, ref temp);
+                        }
                         time = 0;
                         return;
                     }
@@ -137,11 +150,17 @@ namespace LargerInventory.UI.ExtraUI
                         if (source.stack <= 0)
                         {
                             Item temp = new();
-                            Info.Changed(InvUI.Ins.Token, ref temp);
+                            if (InvToken.TryGetToken(out token))
+                            {
+                                Info.Changed(token, ref temp);
+                            }
                             time = 0;
                             return;
                         }
-                        Info.Changed(InvUI.Ins.Token, ref source, false);
+                        if (InvToken.TryGetToken(out token))
+                        {
+                            Info.Changed(token, ref source, false);
+                        }
                     }
                 }
                 time++;
@@ -168,7 +187,6 @@ namespace LargerInventory.UI.ExtraUI
 
                 ReLogic.Graphics.DynamicSpriteFont font = FontAssets.ItemStack.Value;
                 string stack = item.stack.ToString();
-                Vector2 size = font.MeasureString(stack);
                 Vector2 offset = new Vector2(8, -24) * 0.8f;
                 ChatManager.DrawColorCodedStringWithShadow(sb, font, stack,
                     rect.BottomLeft() + offset, Color.White, 0, Vector2.Zero, Vector2.One * 0.8f);
@@ -182,7 +200,10 @@ namespace LargerInventory.UI.ExtraUI
             if (state.IsKeyDown(Keys.LeftShift))
             {
                 Item item = player.GetItem(Main.myPlayer, Info.Item, new());
-                Info.Changed(InvUI.Ins.Token, ref item);
+                if (InvToken.TryGetToken(out var token))
+                {
+                    Info.Changed(token, ref item);
+                }
                 return true;
             }
             if (state.IsKeyDown(Keys.LeftControl))
@@ -192,7 +213,10 @@ namespace LargerInventory.UI.ExtraUI
                     if (player.SellItem(Info.Item))
                     {
                         Item temp = new();
-                        Info.Changed(InvUI.Ins.Token, ref temp);
+                        if (InvToken.TryGetToken(out var token))
+                        {
+                            Info.Changed(token, ref temp);
+                        }
                         return true;
                     }
                 }
@@ -200,7 +224,10 @@ namespace LargerInventory.UI.ExtraUI
                 {
                     player.trashItem = Info.Item;
                     Item temp = new();
-                    Info.Changed(InvUI.Ins.Token, ref temp);
+                    if (InvToken.TryGetToken(out var token))
+                    {
+                        Info.Changed(token, ref temp);
+                    }
                     return true;
                 }
             }

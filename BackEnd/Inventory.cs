@@ -451,6 +451,7 @@ namespace LargerInventory.BackEnd
                     Main.QueueMainThreadAction(() =>
                     {
                         callback(state);
+                        token.Return();
                     });
                 });
             }
