@@ -29,7 +29,7 @@ public class InvUI : UIState
     private UIPanel bg;
     private UISearchBar input;
     private UIWaitRefresh waitText;
-    private const string UIKey = "UI.Inventory.";
+    private const string UIKey = "UI.";
     private bool load;
     private List<UIInvSlot> originSlots;
     internal bool needRefresh;
@@ -60,11 +60,8 @@ public class InvUI : UIState
         };
         bg.OnLeftMouseDown += (UIMouseEvent evt, UIElement listeningElement) =>
         {
-            if (bg.GetElementAt(Main.MouseScreen) == bg)
-            {
-                dragging = true;
-                oldPos = Main.MouseScreen;
-            }
+            dragging = true;
+            oldPos = Main.MouseScreen;
         };
         Append(bg);
 
@@ -74,7 +71,7 @@ public class InvUI : UIState
         filter.OnLeftMouseDown += (evt, ls) =>
         {
             LISystem.filterUI.OnInitialize();
-            InvFilter.ChangeVisible(true);
+            InvFilter.ChangeVisible(true, this);
         };
         bg.Append(filter);
 
@@ -82,6 +79,16 @@ public class InvUI : UIState
         clear.SetPos(70, 0);
         clear.OnLeftMouseDown += (_, _) => LISystem.filterUI.ClearFilters();
         bg.Append(clear);
+
+        UITextButton recipe = new(InvGTV("Common.Recipe"));
+        recipe.SetPos(70 + clear.Width.Pixels + 10, 0);
+        recipe.OnLeftMouseDown += (_, _) =>
+        {
+            LISystem.reipceUI.OnInitialize();
+            LISystem.reipceUIF.IsVisible = true;
+            LISystem.invUIF.IsVisible = false;
+        };
+        bg.Append(recipe);
 
         UIPanel searchBg = new();
         searchBg.SetSize(100, 30);

@@ -37,7 +37,10 @@ namespace LargerInventory.UI.ExtraUI
             }
             else
             {
-                Info.Changed(InvUI.Ins.Token, ref item, false);
+                if (InvToken.TryGetToken(out var token))
+                {
+                    Info.Changed(token, ref item, false);
+                }
             }
         }
         private void UIInvSlot_OnLeftMouseDown(UIMouseEvent evt, UIElement listeningElement)

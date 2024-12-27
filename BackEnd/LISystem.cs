@@ -11,7 +11,8 @@ namespace LargerInventory.BackEnd
     {
         internal static InvUI invUI;
         internal static InvFilter filterUI;
-        internal static UserInterface invUIF, filterUIF;
+        internal static InvReipce reipceUI;
+        internal static UserInterface invUIF, filterUIF,reipceUIF;
         private GameTime gt;
         public override void Load()
         {
@@ -19,10 +20,14 @@ namespace LargerInventory.BackEnd
             invUI.Activate();
             filterUI = new();
             filterUI.Activate();
+            reipceUI = new();
+            reipceUI.Activate();
             invUIF = new();
             invUIF.SetState(invUI);
             filterUIF = new();
             filterUIF.SetState(filterUI);
+            reipceUIF = new();
+            reipceUIF.SetState(reipceUI);
         }
         public override void UpdateUI(GameTime gameTime)
         {
@@ -33,6 +38,10 @@ namespace LargerInventory.BackEnd
             if (filterUIF.IsVisible)
             {
                 filterUIF.Update(gameTime);
+            }
+            if (reipceUIF.IsVisible)
+            {
+                reipceUIF.Update(gameTime);
             }
             gt = gameTime;
         }

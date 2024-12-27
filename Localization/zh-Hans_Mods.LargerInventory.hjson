@@ -25,14 +25,23 @@ Configs: {
 }
 
 UI: {
-	Inventory: {
-		Common: {
-			OpenFilter: 筛选
-			ClearFilters: 清除筛选
-			WaitRefresh: 等待刷新
-			RefreshFailed: 刷新失败
-			Search: 搜索
-		}
+	Common: {
+		OpenFilter: 筛选
+		ClearFilters: 清除筛选
+		WaitRefresh: 等待刷新
+		RefreshFailed: 刷新失败
+		Search: 搜索
+		Edit: 编辑
+		Recipe: 合成
+	}
+
+	Recipe: {
+		Until: 合成若干个
+		Keep: 保持若干个
+		Always: 始终合成
+		Notify: 完成时通知玩家
+		PutIntoVanilla: 完成后放入原版背包
+		IgnoreFavorite: 收藏物品不作为材料
 	}
 
 	ItemFilter: {

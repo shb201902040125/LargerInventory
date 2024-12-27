@@ -25,14 +25,23 @@ Configs: {
 }
 
 UI: {
-	Inventory: {
-		Common: {
-			OpenFilter: Filter
-			ClearFilters: Clear Filters
-			WaitRefresh: Wait Refresh
-			RefreshFailed: Refresh Failed
-			Search: Search
-		}
+	Common: {
+		OpenFilter: Filter
+		ClearFilters: Clear Filters
+		WaitRefresh: Wait Refresh
+		RefreshFailed: Refresh Failed
+		Search: Search
+		Edit: Edit
+		Recipe: Recipe
+	}
+
+	Recipe: {
+		Until: Until#
+		Keep: Keep#
+		Always: Always
+		Notify: Notify player when completed
+		PutIntoVanilla: Put into vanilla inv when completed
+		IgnoreFavorite: Disallow favorite item as material
 	}
 
 	ItemFilter: {
