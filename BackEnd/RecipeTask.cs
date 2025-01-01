@@ -13,14 +13,14 @@ using Terraria.ModLoader.IO;
 
 namespace LargerInventory.BackEnd
 {
-    internal class RecipeTask : GameEvent<RecipeTask, Dictionary<int, List<Item>>>
+    internal class RecipeTask
     {
         public Recipe Recipe { get; }
         public RecipeTask(Recipe targetRecipe)
         {
             Recipe = targetRecipe;
         }
-        public override bool Update(Dictionary<int, List<Item>> inv)
+        public bool Update(Dictionary<int, List<Item>> inv)
         {
             if (Main.mouseItem.stack > 0 && !ItemLoader.CanStack(Main.mouseItem, Recipe.createItem))
             {

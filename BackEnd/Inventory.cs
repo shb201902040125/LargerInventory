@@ -15,7 +15,7 @@ namespace LargerInventory.BackEnd
     public static class Inventory
     {
         private static Dictionary<int, List<Item>> _items = [];
-        private static NormalCache _cache = new();
+        private static Dictionary<string,object> _cache = new();
         private static Item _fakeItem;
         private static Queue<RecipeTask> _recipeTask = [];
 
@@ -88,11 +88,11 @@ namespace LargerInventory.BackEnd
 
         private static T GetOrCreateCache<T>(string key) where T : class
         {
-            if (!_cache.TryGet(key, out T cacheData))
+            if (!_cache.TryGetValue(key, out object cacheData))
             {
                 _cache.Add(key, cacheData = Activator.CreateInstance<T>());
             }
-            return cacheData;
+            return cacheData as T;
         }
         private static void WriteCache(int type)
         {

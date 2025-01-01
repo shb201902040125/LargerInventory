@@ -1,7 +1,9 @@
 ﻿using SML.Common;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
+using Terraria;
 
 namespace LargerInventory.BackEnd
 {
@@ -63,6 +65,72 @@ namespace LargerInventory.BackEnd
             {
                 Monitor.Exit(_lock);
             }
+        }
+    }
+    public class DisposeWapper : IDisposable
+    {
+        private Action _dispose;
+        public bool Disposed { get; private set; }
+        public DisposeWapper(Action dispose)
+        {
+            _dispose = dispose;
+        }
+        ~DisposeWapper()
+        {
+            if (Disposed)
+            {
+                return;
+            }
+            _dispose?.Invoke();
+            _dispose = null;
+        }
+        public void Dispose()
+        {
+            if (Disposed)
+            {
+                return;
+            }
+            _dispose?.Invoke();
+            _dispose = null;
+            Disposed = true;
+            GC.SuppressFinalize(this);
+        }
+    }
+    public class DisposeWapper<T> : IDisposable
+    {
+        private Action<T> _dispose;
+        public T Value { get; private set; }
+        public bool Disposed { get; private set; }
+        public DisposeWapper(T value, Action<T> dispose)
+        {
+            Value = value;
+            _dispose = dispose;
+        }
+        ~DisposeWapper()
+        {
+            if (Disposed)
+            {
+                return;
+            }
+            _dispose?.Invoke(this);
+            _dispose = null;
+            Value = default;
+        }
+        public void Dispose()
+        {
+            if (Disposed)
+            {
+                return;
+            }
+            _dispose?.Invoke(Value);
+            _dispose = null;
+            Value = default;
+            Disposed = true;
+            GC.SuppressFinalize(this);
+        }
+        public static implicit operator T(DisposeWapper<T> wapper)
+        {
+            return wapper.Value;
         }
     }
 }
