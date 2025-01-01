@@ -12,7 +12,7 @@ namespace LargerInventory.BackEnd
         internal static InvUI invUI;
         internal static InvFilter filterUI;
         internal static InvReipce reipceUI;
-        internal static UserInterface invUIF, filterUIF,reipceUIF;
+        internal static UserInterface invUIF, filterUIF,recipeUIF;
         private GameTime gt;
         public override void Load()
         {
@@ -26,8 +26,8 @@ namespace LargerInventory.BackEnd
             invUIF.SetState(invUI);
             filterUIF = new();
             filterUIF.SetState(filterUI);
-            reipceUIF = new();
-            reipceUIF.SetState(reipceUI);
+            recipeUIF = new();
+            recipeUIF.SetState(reipceUI);
         }
         public override void UpdateUI(GameTime gameTime)
         {
@@ -39,9 +39,9 @@ namespace LargerInventory.BackEnd
             {
                 filterUIF.Update(gameTime);
             }
-            if (reipceUIF.IsVisible)
+            if (recipeUIF.IsVisible)
             {
-                reipceUIF.Update(gameTime);
+                recipeUIF.Update(gameTime);
             }
             gt = gameTime;
         }
@@ -54,13 +54,18 @@ namespace LargerInventory.BackEnd
                    Mod.Name,
                    delegate
                    {
+                       var sb = Main.spriteBatch;
                        if (invUIF.IsVisible)
                        {
-                           invUIF.Draw(Main.spriteBatch, gt);
+                           invUIF.Draw(sb, gt);
                        }
                        if (filterUIF.IsVisible)
                        {
-                           filterUIF.Draw(Main.spriteBatch, gt);
+                           filterUIF.Draw(sb, gt);
+                       }
+                       if (recipeUIF.IsVisible)
+                       {
+                           recipeUIF.Draw(sb, gt);
                        }
                        return true;
                    },

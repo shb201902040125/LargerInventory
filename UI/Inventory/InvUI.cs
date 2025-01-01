@@ -85,7 +85,7 @@ public class InvUI : UIState
         recipe.OnLeftMouseDown += (_, _) =>
         {
             LISystem.reipceUI.OnInitialize();
-            LISystem.reipceUIF.IsVisible = true;
+            LISystem.recipeUIF.IsVisible = true;
             LISystem.invUIF.IsVisible = false;
         };
         bg.Append(recipe);

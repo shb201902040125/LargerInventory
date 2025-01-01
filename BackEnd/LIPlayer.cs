@@ -24,7 +24,7 @@ namespace LargerInventory.BackEnd
                 {
                     return;
                 }
-                if (Inventory.GetCount(token) == 0)
+                /*if (Inventory.GetCount(token) == 0)
                 {
                     for (int i = 1; i < ItemID.Count; i++)
                     {
@@ -32,7 +32,7 @@ namespace LargerInventory.BackEnd
                         item.stack = Main.rand.Next(1, item.maxStack);
                         Inventory.PushItem(token, item, out _);
                     }
-                }
+                }*/
                 InvUI.Ins.CallRefresh();
                 if (!LISystem.filterUIF.IsVisible)
                 {

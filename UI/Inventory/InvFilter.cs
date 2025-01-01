@@ -372,7 +372,7 @@ namespace LargerInventory.UI.Inventory
         public static void ChangeVisible(bool openFilter, UIState interactUI = null)
         {
             LISystem.filterUIF.IsVisible = openFilter;
-            LISystem.invUIF.IsVisible = LISystem.reipceUIF.IsVisible = !openFilter;
+            LISystem.invUIF.IsVisible = LISystem.recipeUIF.IsVisible = !openFilter;
             if (interactUI != null)
                 InvFilter.interactUI = interactUI;
         }
