@@ -5,6 +5,14 @@
 	<ItemGroup>
 	  <None Remove="Localization\zh-Hans_Mods.LargerInventory.hjson" />
 	</ItemGroup>
+	<ItemGroup>
+	  <PackageReference Include="Krafs.Publicizer" Version="2.3.0">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+    <Publicize Include="tModLoader:Terraria.GameContent.UI.CustomCurrencyManager._currencies" />
+    <Publicize Include="tModLoader:Terraria.GameContent.UI.CustomCurrencySystem._valuePerUnit" />
+	</ItemGroup>
 
 	<!-- General -->
   <ItemGroup>

@@ -14,6 +14,16 @@ namespace LargerInventory.BackEnd
         public override void Load()
         {
             SwitchInv = KeybindLoader.RegisterKeybind(Mod, "SwitchInv", Keys.C);
+            On_Player.BuyItem += On_Player_BuyItem;
+        }
+
+        public override void Unload()
+        {
+            On_Player.BuyItem -= On_Player_BuyItem;
+        }
+        private bool On_Player_BuyItem(On_Player.orig_BuyItem orig, Player self, long price, int customCurrency)
+        {
+            return Inventory.BuyItem(self, price, customCurrency, true);
         }
         public override void ProcessTriggers(TriggersSet triggersSet)
         {

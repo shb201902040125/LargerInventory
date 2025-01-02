@@ -1,4 +1,5 @@
-﻿using SML.Common;
+﻿using LargerInventory.UI.Inventory;
+using SML.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -6,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.GameContent.UI;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
@@ -15,7 +17,7 @@ namespace LargerInventory.BackEnd
     public static class Inventory
     {
         private static Dictionary<int, List<Item>> _items = [];
-        private static Dictionary<string,object> _cache = new();
+        private static Dictionary<string, object> _cache = new();
         private static Item _fakeItem;
         private static Queue<RecipeTask> _recipeTask = [];
 
@@ -622,6 +624,150 @@ namespace LargerInventory.BackEnd
             _recipeTask = new Queue<RecipeTask>(recipeTasks);
 
             tokenRef.Value.Return();
+        }
+
+        static Dictionary<int, int> defaultCoinValueMap = new()
+        {
+            {
+                ItemID.PlatinumCoin,
+                1000000
+            },
+            {
+                ItemID.GoldCoin,
+                10000
+            },
+            {
+                ItemID.SilverCoin,
+                100
+            },
+            {
+                ItemID.CopperCoin,
+                1
+            }
+        };
+        static Dictionary<int, int> GetValueMap(int customCurrency)
+        {
+            return customCurrency == -1 ? defaultCoinValueMap : CustomCurrencyManager._currencies[customCurrency]._valuePerUnit;
+        }
+        internal static bool BuyItem(Player player, long price, int customCurrency, bool payActual = true)
+        {
+            bool origResult = player.CanAfford(price, customCurrency) && player.PayCurrency(price, customCurrency);
+            if (origResult || !InvToken.TryGetToken(out var token))
+            {
+                return origResult;
+            }
+            var valueMap = GetValueMap(customCurrency).OrderByDescending(pair => pair.Value);
+            long valueSum = 0;
+            bool canAfford = false;
+            foreach ((int type, int value) in valueMap)
+            {
+                if (_items.TryGetValue(type, out var itemList))
+                {
+                    long estimate = (price - valueSum - 1) / value + 1;
+                    for (int i = 0; i < itemList.Count; i++)
+                    {
+                        long count = Math.Min(estimate, itemList[i].stack);
+                        if (long.MaxValue - valueSum < count * value)
+                        {
+                            canAfford = true;
+                            break;
+                        }
+                        else
+                        {
+                            valueSum += count * value;
+                        }
+                        estimate -= count;
+                        if (estimate <= 0 || valueSum >= price)
+                        {
+                            canAfford = true;
+                            break;
+                        }
+                    }
+                    if (canAfford)
+                    {
+                        break;
+                    }
+                }
+            }
+            if (!canAfford)
+            {
+                return false;
+            }
+            if(!payActual)
+            {
+                return true;
+            }
+            bool payClear = false;
+            HashSet<int> relatedCurrency = [];
+            foreach ((int type, int value) in valueMap)
+            {
+                if (value > price)
+                {
+                    break;
+                }
+                if (_items.TryGetValue(type, out var itemList))
+                {
+                    long estimate = (price - 1) / value + 1;
+                    var priceCache = price;
+                    for (int i = 0; i < itemList.Count; i++)
+                    {
+                        int count = (int)Math.Min(estimate, itemList[i].stack);
+                        if (count == 0)
+                        {
+                            continue;
+                        }
+                        itemList[i].stack -= count;
+                        price -= count * value;
+                        if (price <= 0)
+                        {
+                            payClear = true;
+                            break;
+                        }
+                    }
+                    if (priceCache != price)
+                    {
+                        relatedCurrency.Add(type);
+                    }
+                    if (payClear)
+                    {
+                        break;
+                    }
+                }
+            }
+            if (price < 0)
+            {
+                price *= -1;
+                foreach ((int type, int value) in valueMap)
+                {
+                    long count = price / value;
+                    if (count == 0)
+                    {
+                        continue;
+                    }
+                    relatedCurrency.Add(type);
+                    while (count > 0)
+                    {
+                        Item item = new(type);
+                        item.stack = (int)Math.Min(item.maxStack, count);
+                        count -= item.stack;
+                        PushItem(token, item, out _);
+                    }
+                    price -= count * value;
+                }
+                if (price > 0)
+                {
+                    throw new ArgumentException("The currency system lacks a basic price unit (no currency of value 1)");
+                }
+            }
+            if (relatedCurrency.Count != 0)
+            {
+                foreach (var currency in relatedCurrency)
+                {
+                    CompressItemList(currency);
+                }
+                InvUI.Ins.needRefresh = true;
+            }
+            return true;
         }
     }
 }
