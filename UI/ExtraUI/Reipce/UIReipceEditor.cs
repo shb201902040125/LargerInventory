@@ -26,7 +26,7 @@ namespace LargerInventory.UI.ExtraUI.Reipce
             until.OnLeftMouseDown += (_, _) =>
             {
                 until.checkActive = !until.checkActive;
-                EditingRT.mode = 0;
+                EditingRT.Mode = 0;
                 group[1].checkActive = false;
                 group[2].checkActive = false;
             };
@@ -38,7 +38,7 @@ namespace LargerInventory.UI.ExtraUI.Reipce
             keep.OnLeftMouseDown += (_, _) =>
             {
                 keep.checkActive = !keep.checkActive;
-                EditingRT.mode = 0;
+                EditingRT.Mode = 1;
                 group[0].checkActive = false;
                 group[2].checkActive = false;
             };
@@ -50,7 +50,7 @@ namespace LargerInventory.UI.ExtraUI.Reipce
             always.OnLeftMouseDown += (_, _) =>
             {
                 always.checkActive = !always.checkActive;
-                EditingRT.mode = 0;
+                EditingRT.Mode = 2;
                 group[0].checkActive = false;
                 group[1].checkActive = false;
             };
@@ -119,7 +119,7 @@ namespace LargerInventory.UI.ExtraUI.Reipce
             EditingRT = rt;
             for (int i = 0; i < 3; i++)
             {
-                group[i].checkActive = rt.mode == i;
+                group[i].checkActive = rt.Mode == i;
             }
             group[3].checkActive = rt.Notify;
             group[4].checkActive = rt.PutIntoVanilla;
@@ -127,7 +127,7 @@ namespace LargerInventory.UI.ExtraUI.Reipce
             accepts.Clear();
             int x = 0, y = 0, w = (int)accepts.GetInnerDimensions().Width;
             bool first = true, needSpaceing = false;
-            foreach (var (index, rg) in rt.recipeGroups)
+            foreach (var (index, rg) in rt.RecipeGroups)
             {
                 var localIndex = index;
                 UIText name = new(RecipeGroup.recipeGroups[index].GetText.Invoke());
@@ -150,7 +150,7 @@ namespace LargerInventory.UI.ExtraUI.Reipce
                     int type = id;
                     slot.OnLeftMouseDown += (_, _) =>
                     {
-                        EditingRT.recipeGroups[localIndex][type] = slot.locked = !slot.locked;
+                        EditingRT.RecipeGroups[localIndex][type] = slot.locked = !slot.locked;
                     };
                     slot.SetPos(x, y);
                     accepts.Add(slot);

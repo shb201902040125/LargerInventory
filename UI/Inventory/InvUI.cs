@@ -84,7 +84,7 @@ public class InvUI : UIState
         recipe.SetPos(70 + clear.Width.Pixels + 10, 0);
         recipe.OnLeftMouseDown += (_, _) =>
         {
-            LISystem.recipeUI.OnInitialize();
+            LISystem.recipeUI.Load();
             LISystem.recipeUIF.IsVisible = true;
             LISystem.invUIF.IsVisible = false;
         };

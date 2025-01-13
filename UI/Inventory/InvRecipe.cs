@@ -1,4 +1,5 @@
-﻿using LargerInventory.UI.ExtraUI;
+﻿using LargerInventory.BackEnd;
+using LargerInventory.UI.ExtraUI;
 using LargerInventory.UI.ExtraUI.Reipce;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -20,9 +21,6 @@ namespace LargerInventory.UI.Inventory
         private bool loaded;
         public override void OnInitialize()
         {
-            if (loaded)
-                return;
-            loaded = true;
             RemoveAllChildren();
             #region 基本
             UIPanel panel = new();
@@ -141,6 +139,20 @@ namespace LargerInventory.UI.Inventory
             Main.inventoryScale = 0.75f;
             base.DrawChildren(spriteBatch);
             Main.inventoryScale = scale;
+        }
+        public void Load()
+        {
+            if (loaded)
+                return;
+            loaded = true;
+            OnInitialize();
+            //TODO: 把遍历目标加进来          ↓↓↓
+            /*foreach (RecipeTask rt in Inventory.rts)
+            {
+                UIRecipeTask task = new(rt);
+                taskView.Add(task);
+            }
+            taskView.RecalculateChildren();*/
         }
     }
 }

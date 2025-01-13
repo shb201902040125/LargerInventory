@@ -1,9 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
-using SML.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -23,9 +21,18 @@ namespace LargerInventory.BackEnd
             Always
         }
         public Recipe Recipe { get; }
-        public int TargetCount { get;internal set; }
+        public int TargetCount { get; internal set; }
         public TaskType Type { get; internal set; }
-        public RecipeTask(Recipe targetRecipe,int targetCount,TaskType taskType)
+        public bool Notify { get; internal set; }
+        public bool PutIntoVanilla { get; internal set; }
+        public bool IgnoreFavorite { get; internal set; } = true;
+
+        //TODO: 新字段的保存和合成组过滤器的应用
+        /// <summary>
+        /// <RecipeGroupID, <ItemType, AllowConsume>>
+        /// </summary>
+        public Dictionary<int, Dictionary<int, bool>> RecipeGroups { get; internal set; } = [];
+        public RecipeTask(Recipe targetRecipe, int targetCount, TaskType taskType)
         {
             Recipe = targetRecipe;
             TargetCount = targetCount;
@@ -143,7 +150,7 @@ namespace LargerInventory.BackEnd
             {
                 Item createItem = tag.Get<Item>(nameof(Recipe.createItem));
                 List<Item> requiredItem = tag.Get<List<Item>>(nameof(Recipe.requiredItem));
-                targetCount=tag.Get<int>(nameof(RecipeTask.TargetCount));
+                targetCount = tag.Get<int>(nameof(RecipeTask.TargetCount));
                 taskType = Enum.Parse<RecipeTask.TaskType>(tag.Get<string>(nameof(RecipeTask.Type)));
                 List<int> groups = [];
                 groups.AddRange(tag.Get<int[]>("trGroups"));
@@ -183,7 +190,8 @@ namespace LargerInventory.BackEnd
                     }
                     targetRecipe = recipe;
                     break;
-                Next:;
+                Next:
+                    ;
                 }
             }
             catch

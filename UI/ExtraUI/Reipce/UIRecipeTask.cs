@@ -12,21 +12,25 @@ namespace LargerInventory.UI.ExtraUI.Reipce
 {
     public class UIRecipeTask : UIPanel
     {
-        public readonly int recipeIndex;
-        public int mode;
-        public int count;
-        public bool Notify;
-        public bool PutIntoVanilla;
-        public bool IgnoreFavorite = true;
+        public readonly RecipeTask rt;
+        public int Mode { get => (int)rt.Type; internal set => rt.Type = (RecipeTask.TaskType)value; }
+        public int Count { get => rt.TargetCount; internal set => rt.TargetCount = value; }
+        public bool Notify { get => rt.Notify; internal set => rt.Notify = value; }
+        public bool PutIntoVanilla { get => rt.PutIntoVanilla; internal set => rt.PutIntoVanilla = value; }
+        public bool IgnoreFavorite { get => rt.IgnoreFavorite; internal set => rt.IgnoreFavorite = value; }
+        public Dictionary<int, Dictionary<int, bool>> RecipeGroups => rt.RecipeGroups;
         private bool editing;
         private readonly UISearchBar input;
-        //TODO: 这玩意给你咯
-        public Dictionary<int/*RecipeGroupID*/, Dictionary<int/*ItemType*/, bool/*AllowConsume*/>> recipeGroups;
-        public UIRecipeTask(int recipeIndex)
+        public UIRecipeTask(int recipeIndex) : this(new RecipeTask(Main.recipe[recipeIndex], 0, RecipeTask.TaskType.Timer))
         {
+
+        }
+        public UIRecipeTask(RecipeTask rt)
+        {
+            this.rt = rt;
             this.SetSize(0, 62, 1);
             SetPadding(5);
-            this.recipeIndex = recipeIndex;
+            int recipeIndex = rt.Recipe.RecipeIndex;
             UIRecipe r = new(recipeIndex)
             {
                 VAlign = 0.5f
@@ -43,11 +47,10 @@ namespace LargerInventory.UI.ExtraUI.Reipce
             edit.OnLeftMouseDown += Edit_OnLeftMouseDown;
             Append(edit);
 
-            recipeGroups = [];
             foreach (var accepts in recipe.acceptedGroups)
             {
                 var rg = RecipeGroup.recipeGroups[accepts];
-                recipeGroups[accepts] = rg.ValidItems.ToDictionary(x => x, _ => true);
+                RecipeGroups[accepts] = rg.ValidItems.ToDictionary(x => x, _ => true);
             }
 
             UIPanel searchBg = new();
@@ -78,10 +81,10 @@ namespace LargerInventory.UI.ExtraUI.Reipce
         {
             if (int.TryParse(obj, out var c))
             {
-                count = c;
+                Count = c;
             }
             else
-                input.SetContents(count.ToString());
+                input.SetContents(Count.ToString());
         }
 
         private void Edit_OnLeftMouseDown(UIMouseEvent evt, UIElement listeningElement)
