@@ -20,6 +20,9 @@ namespace LargerInventory.UI.Inventory
         private bool loaded;
         public override void OnInitialize()
         {
+            if (loaded)
+                return;
+            loaded = true;
             RemoveAllChildren();
             #region 基本
             UIPanel panel = new();
