@@ -37,6 +37,7 @@ namespace LargerInventory.BackEnd
                 if (!LISystem.filterUIF.IsVisible)
                 {
                     LISystem.invUIF.IsVisible = !LISystem.invUIF.IsVisible;
+                    LISystem.recipeUIF.IsVisible = LISystem.editorUIF.IsVisible = false;
                     if (!LISystem.invUIF.IsVisible)
                     {
                         Inventory.ClearAllEmptyItems(token);

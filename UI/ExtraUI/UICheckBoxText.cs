@@ -19,14 +19,8 @@ namespace LargerInventory.UI.ExtraUI
             Info = info;
             buttonOn ??= ModContent.Request<Texture2D>("Terraria/Images/UI/ButtonFavoriteActive", AssetRequestMode.ImmediateLoad).Value;
             buttonOff ??= ModContent.Request<Texture2D>("Terraria/Images/UI/ButtonFavoriteInactive", AssetRequestMode.ImmediateLoad).Value;
-            OnLeftClick += UICheckBoxText_OnLeftClick;
             Vector2 size = FontAssets.MouseText.Value.MeasureString(Info);
             this.SetSize(size.X + 30, size.Y);
-        }
-
-        private void UICheckBoxText_OnLeftClick(UIMouseEvent evt, UIElement listeningElement)
-        {
-            //checkActive = !checkActive;
         }
         protected override void DrawSelf(SpriteBatch sb)
         {

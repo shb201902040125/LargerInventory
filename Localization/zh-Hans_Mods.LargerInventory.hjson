@@ -42,6 +42,8 @@ UI: {
 		Notify: 完成时通知玩家
 		PutIntoVanilla: 完成后放入原版背包
 		IgnoreFavorite: 收藏物品不作为材料
+		RecipeGroup: 合成组设置
+		Count: 输入数量
 	}
 
 	ItemFilter: {
