@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using Terraria.GameContent.UI;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Config;
 
@@ -27,7 +28,14 @@ namespace LargerInventory
         [DefaultValue(0)]
         public float AutoUseManaPotion;
 
+        /// <summary>
+        /// 使用LI的货币储存系统
+        /// <br>优先使用LI的货币储存系统，不足时可以额外使用原版背包内的货币</br>
+        /// </summary>
         [DefaultValue(false)]
-        public bool PayFromInventory;
+        public bool PayFromLargerInventory;
+
+        [DefaultValue(15)]
+        public int UpdateRecipeTaskInterval;
     }
 }

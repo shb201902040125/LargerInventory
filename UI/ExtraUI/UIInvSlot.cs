@@ -33,6 +33,7 @@ namespace LargerInventory.UI.ExtraUI
                 if (InvToken.TryGetToken(out var token))
                 {
                     Info.Changed(token, ref temp);
+                    token.Return();
                 }
             }
             else
@@ -40,6 +41,7 @@ namespace LargerInventory.UI.ExtraUI
                 if (InvToken.TryGetToken(out var token))
                 {
                     Info.Changed(token, ref item, false);
+                    token.Return();
                 }
             }
         }

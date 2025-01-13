@@ -1,5 +1,6 @@
 ﻿using LargerInventory.UI.Inventory;
 using Microsoft.Xna.Framework.Input;
+using System.Threading.Tasks;
 using Terraria;
 using Terraria.GameInput;
 using Terraria.ID;
@@ -14,6 +15,15 @@ namespace LargerInventory.BackEnd
         public override void Load()
         {
             SwitchInv = KeybindLoader.RegisterKeybind(Mod, "SwitchInv", Keys.C);
+            On_Player.BuyItem += On_Player_BuyItem;
+        }
+        public override void Unload()
+        {
+            On_Player.BuyItem -= On_Player_BuyItem;
+        }
+        private bool On_Player_BuyItem(On_Player.orig_BuyItem orig, Player self, long price, int customCurrency)
+        {
+            return Inventory.BuyItem(self, price, customCurrency, true);
         }
         public override void ProcessTriggers(TriggersSet triggersSet)
         {
@@ -52,6 +62,7 @@ namespace LargerInventory.BackEnd
             {
                 Inventory.TryHealLife(token, Player);
                 Inventory.TryHealMana(token, Player);
+                Inventory.UpdateRecipeTasks(token);
                 token.Return();
             }
         }

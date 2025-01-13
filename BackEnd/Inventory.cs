@@ -1,4 +1,5 @@
-﻿using SML.Common;
+﻿using LargerInventory.UI.Inventory;
+using SML.Common;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -6,24 +7,59 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Terraria;
+using Terraria.GameContent.UI;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
+using BigInt = System.Numerics.BigInteger;
 
 namespace LargerInventory.BackEnd
 {
     public static class Inventory
     {
         private static Dictionary<int, List<Item>> _items = [];
-        private static NormalCache _cache = new();
+        private static Dictionary<string, object> _cache = new();
         private static Item _fakeItem;
         private static Queue<RecipeTask> _recipeTask = [];
+        private static int _recipeTaskUpdateTimer = 0;
 
         private const string CacheKey_CachedType = "cachedType";
         private const string CacheKey_HealLifeData = "healLifeData";
         private const string CacheKey_HealManaData = "healManaData";
 
-        public static int GetCount(InvToken.Token token) => token.InValid ? _items.Values.Sum(items => items.Count) : -1;
+        public static BigInt GetAllCount(InvToken.Token token)
+        {
+            if (!token.InValid)
+            {
+                return -1;
+            }
+            BigInt counter = BigInt.Zero;
+            foreach (var items in _items.Values)
+            {
+                foreach (var item in items)
+                {
+                    counter += item.stack;
+                }
+            }
+            return counter;
+        }
+        public static BigInt GetItemCount(InvToken.Token token,int type)
+        {
+            if(!token.InValid)
+            {
+                return -1;
+            }
+            BigInt counter = BigInt.Zero;
+            if (_items.TryGetValue(type, out var items))
+            {
+                foreach (var item in items)
+                {
+                    counter += item.stack;
+                }
+            }
+            return counter;
+        }
 
         private static void SplitItem(Item item, List<Item> container)
         {
@@ -88,11 +124,11 @@ namespace LargerInventory.BackEnd
 
         private static T GetOrCreateCache<T>(string key) where T : class
         {
-            if (!_cache.TryGet(key, out T cacheData))
+            if (!_cache.TryGetValue(key, out object cacheData))
             {
                 _cache.Add(key, cacheData = Activator.CreateInstance<T>());
             }
-            return cacheData;
+            return cacheData as T;
         }
         private static void WriteCache(int type)
         {
@@ -557,37 +593,19 @@ namespace LargerInventory.BackEnd
             }
         }
 
-        private static void UpdateRecipeTasks(object? state)
+        internal static void UpdateRecipeTasks(InvToken.Token token)
         {
-            if (state is not TimeSpan updateStep)
+            _recipeTaskUpdateTimer++;
+            if (_recipeTaskUpdateTimer < LIConfigs.Instance.UpdateRecipeTaskInterval)
             {
-                updateStep = new TimeSpan(5 * TimeSpan.TicksPerSecond);
+                return;
             }
-            try
+            if (_recipeTask.TryDequeue(out RecipeTask recipeTask))
             {
-                ManualResetEvent awakeEvent = new(false);
-                Ref<InvToken.Token> tokenRef = null;
-                while (true)
+                if (!recipeTask.Update(_items, token))
                 {
-                    awakeEvent.Reset();
-                    InvToken.WaitForToken(token => { tokenRef = new(token); awakeEvent.Set(); });
-                    awakeEvent.WaitOne();
-                    if (Monitor.TryEnter(_recipeTask) && _recipeTask.TryDequeue(out RecipeTask recipeTask))
-                    {
-                        recipeTask.Update(_items);
-                        Monitor.Exit(_recipeTask);
-                    }
-                    tokenRef.Value.Return();
-                    Thread.Sleep(updateStep);
+                    _recipeTask.Enqueue(recipeTask);
                 }
-            }
-            catch (OperationCanceledException)
-            {
-
-            }
-            catch (Exception ex)
-            {
-                LargerInventory.Ins.Logger.Error(ex);
             }
         }
         internal static void Save(TagCompound tag)
@@ -623,5 +641,102 @@ namespace LargerInventory.BackEnd
 
             tokenRef.Value.Return();
         }
+
+        #region Bank
+        static Dictionary<int, BigInt> _moneyLocal = [];
+        /// <summary>
+        /// 联机共享存款
+        /// <br>以后再做吧</br>
+        /// </summary>
+        static Dictionary<int, BigInt> _moneyShared;
+        internal static bool BuyItem(Player player, long price, int customCurrency, bool payActual = true)
+        {
+            if (LIConfigs.Instance.PayFromLargerInventory)
+            {
+                if (_moneyLocal.TryGetValue(customCurrency, out BigInt amount))
+                {
+                    if (amount >= price)
+                    {
+                        if (payActual)
+                        {
+                            _moneyLocal[customCurrency] = amount - price;
+                        }
+                        return true;
+                    }
+                    else
+                    {
+                        long fixedPrice = (long)(price - amount);
+                        bool fixedResult = player.CanAfford(fixedPrice, customCurrency) && player.PayCurrency(fixedPrice, customCurrency);
+                        if (fixedResult)
+                        {
+                            if(payActual)
+                            {
+                                _moneyLocal[customCurrency] = 0;
+                            }
+                            return true;
+                        }
+                        return false;
+                    }
+                }
+            }
+            return player.CanAfford(price, customCurrency) && player.PayCurrency(price, customCurrency);
+        }
+        internal static void TrySaving(int customCurrency, List<Item> currencies, string failReason)
+        {
+            if (customCurrency == -1)
+            {
+                if (!_moneyLocal.TryGetValue(-1, out BigInt amount))
+                {
+                    amount = _moneyLocal[-1] = BigInt.Zero;
+                }
+                foreach (Item item in currencies)
+                {
+                    switch (item.type)
+                    {
+                        case ItemID.PlatinumCoin:
+                            {
+                                amount += new BigInt(1000000) * item.stack;
+                                break;
+                            }
+                        case ItemID.GoldCoin:
+                            {
+                                amount += new BigInt(10000) * item.stack;
+                                break;
+                            }
+                        case ItemID.SilverCoin:
+                            {
+                                amount += new BigInt(100) * item.stack;
+                                break;
+                            }
+                        case ItemID.CopperCoin:
+                            {
+                                amount += item.stack;
+                                break;
+                            }
+                    }
+                }
+                _moneyLocal[-1] = amount;
+                return;
+            }
+            if (CustomCurrencyManager._currencies.TryGetValue(customCurrency, out var customCurrencySystem))
+            {
+                if (!_moneyLocal.TryGetValue(customCurrency, out var amount))
+                {
+                    amount = _moneyLocal[customCurrency] = BigInt.Zero;
+                }
+                foreach (var item in currencies)
+                {
+                    var value = customCurrencySystem.CountCurrency(out var overFlowing, [item], []);
+                    if (overFlowing)
+                    {
+                        failReason = Language.GetTextValue("Mods.LargerInventory.UI.Inventory.Bank.CustomCurrencySystemDysfunctional");
+                        return;
+                    }
+                    amount += value;
+                }
+                _moneyLocal[customCurrency] = amount;
+            }
+        }
+        #endregion
     }
 }
