@@ -29,10 +29,13 @@ namespace LargerInventory
         public float AutoUseManaPotion;
 
         /// <summary>
-        /// 替换原版支付，背包里的货币将不能使用，只能使用本模组背包储存的货币
-        /// <br>同时默认不支持模组货币使用非预定规则支付(不支持<see cref="CustomCurrencySystem.CountCurrency(out bool, Terraria.Item[], int[])"/>的重写</br>
+        /// 使用LI的货币储存系统
+        /// <br>优先使用LI的货币储存系统，不足时可以额外使用原版背包内的货币</br>
         /// </summary>
         [DefaultValue(false)]
-        public bool PayFromInventory;
+        public bool PayFromLargerInventory;
+
+        [DefaultValue(15)]
+        public int UpdateRecipeTaskInterval;
     }
 }

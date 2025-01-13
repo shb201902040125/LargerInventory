@@ -3,6 +3,7 @@ using SML.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -13,21 +14,35 @@ using Terraria.ModLoader.IO;
 
 namespace LargerInventory.BackEnd
 {
-    internal class RecipeTask
+    public class RecipeTask
     {
+        public enum TaskType
+        {
+            Timer,
+            Keep,
+            Always
+        }
         public Recipe Recipe { get; }
-        public RecipeTask(Recipe targetRecipe)
+        public int TargetCount { get;internal set; }
+        public TaskType Type { get; internal set; }
+        public RecipeTask(Recipe targetRecipe,int targetCount,TaskType taskType)
         {
             Recipe = targetRecipe;
+            TargetCount = targetCount;
+            Type = taskType;
         }
-        public bool Update(Dictionary<int, List<Item>> inv)
+        public bool Update(Dictionary<int, List<Item>> inv, InvToken.Token token)
         {
-            if (Main.mouseItem.stack > 0 && !ItemLoader.CanStack(Main.mouseItem, Recipe.createItem))
+            if (!token.InValid)
+            {
+                return false;
+            }
+            if ((Type == TaskType.Timer && TargetCount <= 0) || (Type == TaskType.Keep && Inventory.GetItemCount(token, Recipe.createItem.type) >= TargetCount))
             {
                 return false;
             }
             Dictionary<int, Ref<int>> fakeMap = CreateFakeMap();
-            HashSet<Ref<int>> checkMap = fakeMap.Values.ToHashSet();
+            HashSet<Ref<int>> checkMap = [.. fakeMap.Values];
             Dictionary<Item, int> consumed = [];
             foreach (int type in fakeMap.Keys)
             {
@@ -65,20 +80,20 @@ namespace LargerInventory.BackEnd
                 crafted.Prefix(-1);
                 AchievementsHelper.NotifyItemCraft(Recipe);
                 AchievementsHelper.NotifyItemPickup(Main.player[Main.myPlayer], Recipe.createItem);
-                if (Main.mouseItem.stack > 0)
-                {
-                    ItemLoader.StackItems(Main.mouseItem, crafted, out int num, false, null);
-                }
-                else
-                {
-                    Main.mouseItem = crafted;
-                }
+                Inventory.PushItem(token, crafted, out _);
                 ItemLoader.OnCreated(Main.mouseItem, new RecipeItemCreationContext(Recipe, [.. consumed.Keys], Main.mouseItem));
                 Main.mouseItem.Center = Main.LocalPlayer.Center;
                 PopupText.NewText(PopupTextContext.ItemCraft, Main.mouseItem, Recipe.createItem.stack, false, false);
                 if (Main.mouseItem.type > ItemID.None || Recipe.createItem.type > ItemID.None)
                 {
                     SoundEngine.PlaySound(SoundID.Grab with { Volume = 1, Pitch = 0 }, -Vector2.One);
+                }
+                if (Type == TaskType.Timer)
+                {
+                    if (TargetCount-- == 0)
+                    {
+                        return true;
+                    }
                 }
             }
             return false;
@@ -117,15 +132,19 @@ namespace LargerInventory.BackEnd
                          .ToDictionary();
         }
     }
-    internal class RecipeTaskTagSerializer : TagSerializer<RecipeTask, TagCompound>
+    public class RecipeTaskTagSerializer : TagSerializer<RecipeTask, TagCompound>
     {
         public override RecipeTask Deserialize(TagCompound tag)
         {
             Recipe targetRecipe = null;
+            int targetCount = 0;
+            RecipeTask.TaskType taskType = RecipeTask.TaskType.Timer;
             try
             {
                 Item createItem = tag.Get<Item>(nameof(Recipe.createItem));
                 List<Item> requiredItem = tag.Get<List<Item>>(nameof(Recipe.requiredItem));
+                targetCount=tag.Get<int>(nameof(RecipeTask.TargetCount));
+                taskType = Enum.Parse<RecipeTask.TaskType>(tag.Get<string>(nameof(RecipeTask.Type)));
                 List<int> groups = [];
                 groups.AddRange(tag.Get<int[]>("trGroups"));
                 groups.AddRange(from string gettext in tag.Get<string[]>("modGroups") select RecipeGroup.recipeGroupIDs[gettext]);
@@ -171,7 +190,7 @@ namespace LargerInventory.BackEnd
             {
                 targetRecipe = null;
             }
-            return new RecipeTask(targetRecipe);
+            return new RecipeTask(targetRecipe, targetCount, taskType);
         }
         public override TagCompound Serialize(RecipeTask value)
         {
@@ -180,6 +199,8 @@ namespace LargerInventory.BackEnd
             {
                 [nameof(Recipe.createItem)] = recipe.createItem,
                 [nameof(Recipe.requiredItem)] = recipe.requiredItem,
+                [nameof(RecipeTask.TargetCount)] = value.TargetCount,
+                [nameof(RecipeTask.Type)] = Enum.GetName(value.Type),
                 ["trGroup"] = (from int id in recipe.acceptedGroups where id < 26 select id).ToArray(),
                 ["modGroup"] = (from int id in recipe.acceptedGroups where id > 25 select RecipeGroup.recipeGroups[id].GetText).ToArray(),
                 [nameof(Recipe.Conditions)] = (from Condition condition in recipe.Conditions select condition.Description.Key).ToArray()

@@ -1,5 +1,6 @@
 ﻿using LargerInventory.UI.Inventory;
 using Microsoft.Xna.Framework.Input;
+using System.Threading.Tasks;
 using Terraria;
 using Terraria.GameInput;
 using Terraria.ID;
@@ -16,7 +17,6 @@ namespace LargerInventory.BackEnd
             SwitchInv = KeybindLoader.RegisterKeybind(Mod, "SwitchInv", Keys.C);
             On_Player.BuyItem += On_Player_BuyItem;
         }
-
         public override void Unload()
         {
             On_Player.BuyItem -= On_Player_BuyItem;
@@ -61,6 +61,7 @@ namespace LargerInventory.BackEnd
             {
                 Inventory.TryHealLife(token, Player);
                 Inventory.TryHealMana(token, Player);
+                Inventory.UpdateRecipeTasks(token);
                 token.Return();
             }
         }
