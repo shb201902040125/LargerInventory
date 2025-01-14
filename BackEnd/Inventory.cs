@@ -600,11 +600,19 @@ namespace LargerInventory.BackEnd
             {
                 return;
             }
+            _recipeTaskUpdateTimer = 0;
             if (_recipeTask.TryDequeue(out RecipeTask recipeTask))
             {
                 if (!recipeTask.Update(_items, token))
                 {
                     _recipeTask.Enqueue(recipeTask);
+                }
+                else
+                {
+                    if(recipeTask.Notify)
+                    {
+                        Main.NewText(Language.GetText("Mods.LargerInventory.Recipe.TaskComplete"));
+                    }
                 }
             }
         }
@@ -629,6 +637,7 @@ namespace LargerInventory.BackEnd
 
             List<List<Item>> items = tag.Get<List<List<Item>>>(nameof(_items));
             List<RecipeTask> recipeTasks = tag.Get<List<RecipeTask>>(nameof(_recipeTask));
+            recipeTasks.RemoveAll(res => res is null);
             _items.Clear();
             foreach (List<Item> list in items)
             {
