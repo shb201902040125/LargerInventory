@@ -24,7 +24,7 @@ namespace LargerInventory.UI.Inventory
     {
         public Func<Item, bool> currentFilter;
         internal static bool IsVisable;
-        internal static UIState interactUI;
+        //internal static UIState interactUI;
         internal static HashSet<int> usedIcon;
         internal static bool load;
         private UIPanel bg;
@@ -369,12 +369,12 @@ namespace LargerInventory.UI.Inventory
                 Main.LocalPlayer.mouseInterface = true;
             }
         }
-        public static void ChangeVisible(bool openFilter, UIState interactUI = null)
+        public static void ChangeVisible(bool openFilter/*, UIState interactUI = null*/)
         {
             LISystem.filterUIF.IsVisible = openFilter;
             LISystem.invUIF.IsVisible = LISystem.recipeUIF.IsVisible = !openFilter;
-            if (interactUI != null)
-                InvFilter.interactUI = interactUI;
+            /*if (interactUI != null)
+                InvFilter.interactUI = interactUI;*/
         }
         private void ConfirmFilter(UIMouseEvent evt, UIElement listeningElement)
         {
@@ -399,14 +399,7 @@ namespace LargerInventory.UI.Inventory
             refreshToken.ThrowIfCancellationRequested();
             if (InvToken.TryGetToken(out var token) && token.InValid)
             {
-                if(interactUI is InvUI)
-                {
-                    BackEnd.Inventory.StartRefreshTask(token, currentFilter, refreshToken, InvUI.Ins.Refresh);
-                }
-                else if(interactUI is InvReipce)
-                {
-                     
-                }
+                BackEnd.Inventory.StartRefreshTask(token, currentFilter, refreshToken, InvUI.Ins.Refresh);
                 token.Return();
             }
         }

@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using LargerInventory.BackEnd;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Terraria;
@@ -15,9 +16,16 @@ namespace LargerInventory.UI.ExtraUI.Reipce
         public UIRecipe(int recipeIndex)
         {
             this.recipeIndex = recipeIndex;
+            this.SetSize(52, 52);
         }
         protected override void DrawSelf(SpriteBatch sb)
         {
+            bool indexInRange = Main.recipe.IndexInRange(recipeIndex);
+            if (!indexInRange)
+            {
+                Main.NewText(recipeIndex);
+                return;
+            }
             Item item = Main.recipe[recipeIndex].createItem;
             Rectangle rect = GetDimensions().ToRectangle();
             sb.Draw(!item.IsAir && item.favorited ? TextureAssets.InventoryBack10.Value : TextureAssets.InventoryBack.Value, rect, Color.White);
@@ -48,6 +56,14 @@ namespace LargerInventory.UI.ExtraUI.Reipce
             if (state.IsKeyDown(Keys.LeftShift))
             {
                 Main.cursorOverride = CursorOverrideID.BackInventory;
+            }
+        }
+        public override void Update(GameTime gameTime)
+        {
+            base.Update(gameTime);
+            if (IsMouseHovering)
+            {
+                LISystem.recipeUI.hoverRecipe = recipeIndex;
             }
         }
     }

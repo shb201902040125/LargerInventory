@@ -1,4 +1,5 @@
-﻿using LargerInventory.UI.Inventory;
+﻿using LargerInventory.UI.ExtraUI.Reipce;
+using LargerInventory.UI.Inventory;
 using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 using Terraria;
@@ -11,8 +12,9 @@ namespace LargerInventory.BackEnd
     {
         internal static InvUI invUI;
         internal static InvFilter filterUI;
-        internal static InvReipce reipceUI;
-        internal static UserInterface invUIF, filterUIF,recipeUIF;
+        internal static InvRecipe recipeUI;
+        internal static UIReipceEditor editorUI;
+        internal static UserInterface invUIF, filterUIF, recipeUIF, editorUIF;
         private GameTime gt;
         public override void Load()
         {
@@ -20,14 +22,18 @@ namespace LargerInventory.BackEnd
             invUI.Activate();
             filterUI = new();
             filterUI.Activate();
-            reipceUI = new();
-            reipceUI.Activate();
+            recipeUI = new();
+            recipeUI.Activate();
+            editorUI = new();
+            editorUI.Activate();
             invUIF = new();
             invUIF.SetState(invUI);
             filterUIF = new();
             filterUIF.SetState(filterUI);
             recipeUIF = new();
-            recipeUIF.SetState(reipceUI);
+            recipeUIF.SetState(recipeUI);
+            editorUIF = new();
+            editorUIF.SetState(editorUI);
         }
         public override void UpdateUI(GameTime gameTime)
         {
@@ -42,6 +48,10 @@ namespace LargerInventory.BackEnd
             if (recipeUIF.IsVisible)
             {
                 recipeUIF.Update(gameTime);
+            }
+            if (editorUIF.IsVisible)
+            {
+                editorUIF.Update(gameTime);
             }
             gt = gameTime;
         }
@@ -66,6 +76,10 @@ namespace LargerInventory.BackEnd
                        if (recipeUIF.IsVisible)
                        {
                            recipeUIF.Draw(sb, gt);
+                       }
+                       if (editorUIF.IsVisible)
+                       {
+                           editorUIF.Draw(sb, gt);
                        }
                        return true;
                    },

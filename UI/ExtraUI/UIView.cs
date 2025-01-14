@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 using Terraria.GameContent.UI.Elements;
 using Terraria.UI;
@@ -49,6 +50,7 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
     /// innerUIE, paddingX, paddingY, return innerHeight
     /// </summary>
     public Func<List<UIElement>, float, float, float> ManualRePosMethod;
+    public bool needRepos = true;
 
     public int Count => _items.Count;
 
@@ -117,15 +119,33 @@ public class UIView : UIElement, IEnumerable<UIElement>, IEnumerable
             }
             else
             {
-                float num = 0f;
-                for (int i = 0; i < _items.Count; i++)
+                if (!_items.Any())
+                    return;
+                if (needRepos)
                 {
+                    float x = 0, y = 0f;
                     float num2 = _items.Count == 1 ? 0f : ListPaddingY;
-                    _items[i].Top.Set(num, 0f);
-                    _items[i].Recalculate();
-                    num += _items[i].GetOuterDimensions().Height + num2;
+                    float width = GetInnerDimensions().Width;
+                    for (int i = 0; i < _items.Count; i++)
+                    {
+                        var uie = _items[i];
+                        uie.SetPos(x, y);
+                        var size = uie.GetDimensions().ToRectangle();
+                        x += size.Width + ListPaddingX;
+                        if (x + size.Width > width)
+                        {
+                            x = 0;
+                            y += size.Height + ListPaddingY;
+                        }
+                    }
+                    if (y > 0)
+                        y -= ListPaddingY;
+                    _innerListHeight = y;
                 }
-                _innerListHeight = num;
+                else
+                {
+                    _innerListHeight = _items.Max(x => x.Top.Pixels + x.Height.Pixels);
+                }
             }
             base.RecalculateChildren();
         }

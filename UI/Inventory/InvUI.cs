@@ -71,7 +71,7 @@ public class InvUI : UIState
         filter.OnLeftMouseDown += (evt, ls) =>
         {
             LISystem.filterUI.OnInitialize();
-            InvFilter.ChangeVisible(true, this);
+            InvFilter.ChangeVisible(true/*, this*/);
         };
         bg.Append(filter);
 
@@ -84,7 +84,7 @@ public class InvUI : UIState
         recipe.SetPos(70 + clear.Width.Pixels + 10, 0);
         recipe.OnLeftMouseDown += (_, _) =>
         {
-            LISystem.reipceUI.OnInitialize();
+            LISystem.recipeUI.Load();
             LISystem.recipeUIF.IsVisible = true;
             LISystem.invUIF.IsVisible = false;
         };

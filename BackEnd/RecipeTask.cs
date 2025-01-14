@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using SML.Common;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -223,7 +222,8 @@ namespace LargerInventory.BackEnd
                     }
                     targetRecipe = recipe;
                     break;
-                Next:;
+                Next:
+                    ;
                 }
                 res = new RecipeTask(targetRecipe, count, taskType, notify, putIntoVanilla, ignoreFavorite);
                 List<string> ignoreRecipeGroup = tag.Get<List<string>>("IgnoreRecipeGroup");

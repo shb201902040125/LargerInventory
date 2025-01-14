@@ -42,6 +42,8 @@ UI: {
 		Notify: Notify player when completed
 		PutIntoVanilla: Put into vanilla inv when completed
 		IgnoreFavorite: Disallow favorite item as material
+		RecipeGroup: Recipe group setting
+		Count: Input amount
 	}
 
 	ItemFilter: {
